@@ -244,12 +244,6 @@ const CartPage = () => {
                 >
                   Proceed to Checkout <ArrowRight className="w-4 h-4" />
                 </button>
-                
-                <div className="mt-6 flex items-center justify-center gap-3 opacity-50 grayscale">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Mastercard_2019_logo.svg/200px-Mastercard_2019_logo.svg.png" className="h-5" alt="Mastercard" />
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/200px-Visa_Inc._logo.svg.png" className="h-3.5" alt="Visa" />
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/200px-PayPal.svg.png" className="h-4" alt="PayPal" />
-                </div>
 
               </div>
             </div>
