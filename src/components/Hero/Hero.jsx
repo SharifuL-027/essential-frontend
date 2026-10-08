@@ -89,7 +89,7 @@ const Hero = () => {
               transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
               src="https://res.cloudinary.com/dsrs8hryx/image/upload/v1791092477/Modern_Gadget_Workspace_Still_Life_ug0rhf.png"
               alt="Tech Illustration"
-              className="w-full max-w-[400px] lg:max-w-none lg:w-[100%] xl:scale-110 object-contain drop-shadow-2xl z-10 transform lg:translate-x-4"
+              className="w-full max-w-100 lg:max-w-none lg:w-full xl:scale-110 object-contain drop-shadow-2xl z-10 transform lg:translate-x-4"
             />
 
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gray-200/60 rounded-full blur-[80px] -z-10"></div>

@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../../api/axiosConfig'; 
 import Hero from '../Hero/Hero'; 
-import Facilities from '../Facilities/Facilities';
 import ProductCard from '../ProductCard'; 
 import { Loader2, Filter, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -144,8 +143,7 @@ const HomePage = () => {
     <div className="w-full bg-[#FAFAFA]">
       
       <Hero />
-      <Facilities />
-
+      
       {/* 🔥 Width বাড়িয়ে 1400px থেকে 1700px করা হয়েছে যাতে ৬টি প্রোডাক্ট সুন্দরভাবে ফিট হয় */}
       <div className="max-w-[1700px] mx-auto px-4 md:px-6 py-12">
         <div className="flex flex-col lg:flex-row gap-6 md:gap-8">

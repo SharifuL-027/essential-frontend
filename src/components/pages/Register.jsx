@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { User, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // 🔥 পাসওয়ার্ড ভিজিবিলিটির জন্য নতুন স্টেট
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
-  // 🔥 TanStack Query: useMutation for Registration
+  // 🔥 TanStack Query: useMutation for Registration (লজিক অপরিবর্তিত)
   const registerMutation = useMutation({
     mutationFn: async (userData) => {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
@@ -23,7 +24,7 @@ const Register = () => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data));
       
-      // হোমপেজে রিডাইরেক্ট করে দেওয়া
+      // হোমপেজে রিডাইরেক্ট করে দেওয়া
       navigate('/');
     },
     onError: (error) => {
@@ -67,7 +68,7 @@ const Register = () => {
                 required 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6b21a8] transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-cyan-600 transition-colors"
                 placeholder="Md. Shariful Islam"
               />
             </div>
@@ -84,7 +85,7 @@ const Register = () => {
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6b21a8] transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-cyan-600 transition-colors"
                 placeholder="name@example.com"
               />
             </div>
@@ -97,27 +98,35 @@ const Register = () => {
                 <Lock className="w-5 h-5" />
               </span>
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} // 🔥 টগল লজিক
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6b21a8] transition-colors"
+                className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-cyan-600 transition-colors"
                 placeholder="••••••••"
               />
+              {/* 🔥 পাসওয়ার্ড শো/হাইড বাটন */}
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-cyan-600 transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 
           <button 
             type="submit" 
             disabled={registerMutation.isPending}
-            className="w-full bg-[#6b21a8] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-900/20 hover:bg-purple-800 transition-colors flex justify-center items-center gap-2 disabled:opacity-70 text-sm"
+            className="w-full bg-cyan-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-cyan-600/30 hover:bg-cyan-700 transition-colors flex justify-center items-center gap-2 disabled:opacity-70 text-sm"
           >
             {registerMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sign Up <ArrowRight className="w-4 h-4" /></>}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-8">
-          Already have an account? <Link to="/login" className="text-[#6b21a8] font-bold hover:underline">Sign in</Link>
+          Already have an account? <Link to="/login" className="text-cyan-600 font-bold hover:underline">Sign in</Link>
         </p>
       </div>
     </div>

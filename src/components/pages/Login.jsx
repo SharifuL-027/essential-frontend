@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // 🔥 পাসওয়ার্ড ভিজিবিলিটির জন্য নতুন স্টেট
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
-  // 🔥 TanStack Query: useMutation for Login
+  // 🔥 TanStack Query: useMutation for Login (লজিক অপরিবর্তিত)
   const loginMutation = useMutation({
     mutationFn: async (credentials) => {
       // তোমার .env ফাইলে VITE_API_URL=http://localhost:5000/api/v1 সেট করা আছে ধরে নিচ্ছি
@@ -23,7 +24,7 @@ const Login = () => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data));
       
-      // লগইন শেষে হোমপেজে পাঠিয়ে দেওয়া
+      // লগইন শেষে হোমপেজে পাঠিয়ে দেওয়া
       navigate('/');
     },
     onError: (error) => {
@@ -69,7 +70,7 @@ const Login = () => {
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6b21a8] transition-colors"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-cyan-600 transition-colors"
                 placeholder="name@example.com"
               />
             </div>
@@ -82,28 +83,36 @@ const Login = () => {
                 <Lock className="w-5 h-5" />
               </span>
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} // 🔥 টগল লজিক
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6b21a8] transition-colors"
+                className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-cyan-600 transition-colors"
                 placeholder="••••••••"
               />
+              {/* 🔥 পাসওয়ার্ড শো/হাইড বাটন */}
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-cyan-600 transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center text-gray-600 cursor-pointer">
-              <input type="checkbox" className="rounded border-gray-300 text-[#6b21a8] focus:ring-[#6b21a8] mr-2" />
+              <input type="checkbox" className="rounded border-gray-300 text-cyan-600 focus:ring-cyan-600 mr-2" />
               Remember me
             </label>
-            <a href="#" className="text-[#6b21a8] font-semibold hover:underline">Forgot password?</a>
+            <a href="#" className="text-cyan-600 font-semibold hover:underline">Forgot password?</a>
           </div>
 
           <button 
             type="submit" 
             disabled={loginMutation.isPending}
-            className="w-full bg-[#6b21a8] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-900/20 hover:bg-purple-800 transition-colors flex justify-center items-center gap-2 disabled:opacity-70 text-sm"
+            className="w-full bg-cyan-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-cyan-600/30 hover:bg-cyan-700 transition-colors flex justify-center items-center gap-2 disabled:opacity-70 text-sm"
           >
             {loginMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sign In <ArrowRight className="w-4 h-4" /></>}
           </button>
@@ -111,7 +120,7 @@ const Login = () => {
 
         {/* Footer Link */}
         <p className="text-center text-sm text-gray-500 mt-8">
-          Don't have an account? <Link to="/register" className="text-[#6b21a8] font-bold hover:underline">Sign up</Link>
+          Don't have an account? <Link to="/register" className="text-cyan-600 font-bold hover:underline">Sign up</Link>
         </p>
 
       </div>
