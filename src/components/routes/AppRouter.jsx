@@ -19,7 +19,7 @@ import AdminCoupons from '../../admin/AdminCoupons';
 // Customer & Public Pages
 import CustomerDashboard from '../../customer/CustomerDashboard';
 import CartPage from '../../customer/CartPage';
-import WishlistPage from '../../customer/WishListPage';
+import WishlistPage from '../../customer/WishlistPage';
 import ProductDetails from '../ProductDetails';
 import CheckoutPage from '../../customer/CheckoutPage';
 import CategoryProducts from '../CategoryProducts';
