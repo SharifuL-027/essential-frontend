@@ -30,15 +30,15 @@ import OrderList from '../../admin/OrderList';
 import UserList from '../../admin/UserList';
 import AdminCoupons from '../../admin/AdminCoupons';
 import AdminSettings from '../../admin/AdminSetting';
-
+import EditProduct from '../../admin/EditProduct';
 import AdminRoute from '../../admin/AdminRoute'; 
-import TrackOrder from '../../customer/TrackOrder';
-
+import WhatsAppButton from '../WhatsAppButton';
 const MainLayout = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
+      <Navbar /> 
       <main>
+        <WhatsAppButton/>
         <Outlet />
       </main>
       <Footer/>
@@ -67,7 +67,6 @@ const router = createBrowserRouter([
       { path: "/brand/:brandName", element: <BrandProducts /> },
       { path: "/new-arrival", element: <NewArrival /> },
       { path: "/flash-sale", element: <FlashSale /> },
-      { path: "/track-order", element: <TrackOrder /> },
     ]
   },
 
@@ -89,7 +88,8 @@ const router = createBrowserRouter([
           { path: "orders", element: <OrderList /> }, 
           { path: "users", element: <UserList /> }, 
           { path: "coupons", element: <AdminCoupons /> }, 
-          { path: "settings", element: <AdminSettings /> } 
+          { path: "settings", element: <AdminSettings /> },
+          { path: "edit-product/:id", element: <EditProduct /> }, 
         ]
       }
     ]
