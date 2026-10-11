@@ -32,6 +32,7 @@ import AdminCoupons from '../../admin/AdminCoupons';
 import AdminSettings from '../../admin/AdminSetting';
 
 import AdminRoute from '../../admin/AdminRoute'; 
+import TrackOrder from '../../customer/TrackOrder';
 
 const MainLayout = () => {
   return (
@@ -66,6 +67,7 @@ const router = createBrowserRouter([
       { path: "/brand/:brandName", element: <BrandProducts /> },
       { path: "/new-arrival", element: <NewArrival /> },
       { path: "/flash-sale", element: <FlashSale /> },
+      { path: "/track-order", element: <TrackOrder /> },
     ]
   },
 

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Lock, Search, ChevronDown, Zap, Flame, Heart, LogOut, LayoutDashboard, User, Loader2, X, ChevronRight, Home, Grid, Tag, Box } from 'lucide-react';
+import { ShoppingBag, Lock, Search, ChevronDown, Zap, Flame, Heart, LogOut, LayoutDashboard, User, Loader2, X, ChevronRight, Home, Grid, Tag, Box, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -117,7 +117,7 @@ const Navbar = () => {
           <h2 className="uppercase roboto-bold hidden sm:block">Essential Zone</h2>
         </div>
 
-        {/* 🔥 Center Side: Navigation & Dropdowns (Desktop Only) - Gap and Size Increased */}
+        {/* Center Side: Navigation & Dropdowns (Desktop Only) */}
         <div className="hidden lg:flex items-center space-x-10 xl:space-x-12 text-base font-bold tracking-wide pt-2">
           
           <Link to="/" className="text-gray-600 hover:text-cyan-600 transition-colors">Home</Link>
@@ -218,13 +218,24 @@ const Navbar = () => {
         {/* Right Side: Icons & Mobile Hamburger */}
         <div className="flex items-center space-x-5 pt-1">
           <div className="hidden md:flex items-center space-x-5">
-            {isLoggedIn && (
+            
+            {/* 🔥 User Specific Buttons */}
+            {isLoggedIn ? (
               <Link 
                 to={userRole === 'Admin' ? '/admin' : '/account'} 
                 className="flex items-center gap-1.5 bg-cyan-600 text-white text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm hover:bg-cyan-700 transition-colors"
               >
                 {userRole === 'Admin' ? <LayoutDashboard className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
                 {userRole === 'Admin' ? 'Dashboard' : 'My Account'}
+              </Link>
+            ) : (
+              // 🔥 Guestদের জন্য সরাসরি 'My Orders' (/account) পেজে যাওয়ার বাটন
+              <Link 
+                to="/account" 
+                className="flex items-center gap-1.5 bg-cyan-50 text-cyan-600 border border-cyan-100 text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm hover:bg-cyan-100 transition-colors"
+              >
+                <Package className="w-3.5 h-3.5" />
+                My Orders
               </Link>
             )}
 
@@ -250,6 +261,7 @@ const Navbar = () => {
               )}
             </Link>
             
+            {/* 🔥 Logout or Sign In Button */}
             {isLoggedIn ? (
               <button 
                 onClick={handleLogout} 
@@ -259,13 +271,17 @@ const Navbar = () => {
                 <LogOut className="w-3.5 h-3.5" /> Logout
               </button>
             ) : (
-              <Link to="/login" title="Login" className="text-gray-500 hover:text-cyan-600 transition-colors">
-                <Lock className="w-5 h-5" />
+              <Link 
+                to="/login" 
+                title="Sign In" 
+                className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-gray-500 border border-gray-300 px-3 py-1.5 rounded-full hover:bg-cyan-50 hover:text-cyan-600 hover:border-cyan-200 transition-colors"
+              >
+                <User className="w-3.5 h-3.5" /> Sign In
               </Link>
             )}
           </div>
 
-          {/* 🔥 Mobile Hamburger Icon */}
+          {/* Mobile Hamburger Icon */}
           <button 
             onClick={() => setIsMenuOpen(true)}
             className="flex lg:hidden items-center justify-center p-2 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors"
@@ -306,11 +322,11 @@ const Navbar = () => {
         )}
       </AnimatePresence>
 
-      {/* 🔥 Organized & Left-Aligned Mobile Menu */}
+      {/* Organized & Left-Aligned Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div 
-            initial={{ opacity: 0, x: '-100%' }} // বাম দিক থেকে আসবে
+            initial={{ opacity: 0, x: '-100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '-100%' }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -438,6 +454,7 @@ const Navbar = () => {
                 </button>
               </div>
 
+              {/* 🔥 Mobile Auth Buttons */}
               {isLoggedIn ? (
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
                   <Link to={userRole === 'Admin' ? '/admin' : '/account'} onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 bg-cyan-600 text-white py-2.5 rounded-md text-xs font-bold uppercase hover:bg-cyan-700 transition">
@@ -448,9 +465,14 @@ const Navbar = () => {
                   </button>
                 </div>
               ) : (
-                <Link to="/login" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center w-full gap-2 bg-gray-900 text-white py-3 rounded-md text-sm font-bold uppercase hover:bg-gray-800 transition">
-                  <Lock className="w-4 h-4" /> Sign In / Register
-                </Link>
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
+                  <Link to="/account" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-1.5 bg-cyan-50 text-cyan-600 border border-cyan-100 py-2.5 rounded-md text-xs font-bold uppercase hover:bg-cyan-100 transition-colors">
+                    <Package className="w-4 h-4" /> My Orders
+                  </Link>
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-1.5 bg-cyan-600 text-white py-2.5 rounded-md text-xs font-bold uppercase hover:bg-cyan-700 transition">
+                    <User className="w-4 h-4" /> Sign In
+                  </Link>
+                </div>
               )}
             </div>
 

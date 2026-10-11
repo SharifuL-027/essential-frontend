@@ -12,7 +12,7 @@ const Footer = () => {
           {/* Column 1: Brand Info (Full width on mobile to look better, or keep in 1 col) */}
           <div className="col-span-2 md:col-span-1 flex flex-col gap-4 md:gap-6">
             <Link to="/" className="flex flex-col">
-              <span className="roboto-bold text-3xl md:text-4xl tracking-tighter leading-none text-white">E.</span>
+              <span className="roboto-bold text-3xl md:text-4xl tracking-tighter leading-none text-white">EZ</span>
               {/* 🔥 নাম পরিবর্তন করে ESSENTIAL ZONE করা হলো */}
               <span className="text-[10px] md:text-[11px] tracking-[0.3em] md:tracking-[0.4em] roboto-semibold text-cyan-100 mt-1 uppercase">
                 ESSENTIAL ZONE
@@ -68,15 +68,15 @@ const Footer = () => {
             </h3>
             <ul className="flex flex-col gap-3 md:gap-4">
               <li className="flex items-start gap-2.5 text-cyan-50">
-                <MapPin className="w-4 h-4 md:w-5 md:h-5 text-white flex-shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 md:w-5 md:h-5 text-white shrink-0 mt-0.5" />
                 <span className="roboto-medium text-xs md:text-sm leading-relaxed">287/10/1 Pirer Bagh, Mirpur, Dhaka-1216</span>
               </li>
               <li className="flex items-center gap-2.5 text-cyan-50">
-                <Phone className="w-4 h-4 md:w-5 md:h-5 text-white flex-shrink-0" />
+                <Phone className="w-4 h-4 md:w-5 md:h-5 text-white shrink-0" />
                 <span className="roboto-medium text-xs md:text-sm">01411-248042</span>
               </li>
               <li className="flex items-center gap-2.5 text-cyan-50 break-all">
-                <Mail className="w-4 h-4 md:w-5 md:h-5 text-white flex-shrink-0" />
+                <Mail className="w-4 h-4 md:w-5 md:h-5 text-white shrink-0" />
                 <span className="roboto-medium text-xs md:text-sm">support@essentialbd.com</span>
               </li>
             </ul>

@@ -94,7 +94,9 @@ const CheckoutPage = () => {
     };
 
     try {
-      await api.post('/orders', orderData);
+      // 🔥 ব্যাকএন্ডের রেসপন্সটা res ভেরিয়েবলে রাখলাম
+      const res = await api.post('/orders', orderData);
+      
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('storage'));
       
@@ -103,8 +105,27 @@ const CheckoutPage = () => {
         iconTheme: { primary: '#06b6d4', secondary: '#fff' }
       });
       
+      // ==========================================
+      // 🔥 NEW LOGIC: গেস্ট ইউজারদের অর্ডার লোকাল স্টোরেজে সেভ করা
+      // ==========================================
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        // যদি লগইন করা না থাকে (গেস্ট), তাহলে তার অর্ডার ব্রাউজারে সেভ করে রাখবো
+        const guestOrders = JSON.parse(localStorage.getItem('guestOrders')) || [];
+        const newOrder = res.data?.data || res.data; // ডাটাবেস থেকে আসা নতুন অর্ডার
+        
+        // যদি ব্যাকএন্ড নতুন অর্ডারটা সরাসরি রেসপন্সে না পাঠায়, তবে আমরা লোকাল orderData সেভ করবো
+        const orderToSave = newOrder?._id ? newOrder : { ...orderData, _id: Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString(), isDelivered: false };
+        
+        guestOrders.unshift(orderToSave); // লিস্টের শুরুতে অ্যাড করা হলো
+        localStorage.setItem('guestOrders', JSON.stringify(guestOrders));
+      }
+      
       setLoading(false);
+      
+      // 🔥 এখন লগইন করা থাকুক বা না থাকুক (গেস্ট), সোজা My Account পেজেই যাবে
       navigate('/account');
+      
     } catch (error) {
       console.error(error);
       setErrorMsg(error.response?.data?.message || 'Failed to place order. Please try again.');
