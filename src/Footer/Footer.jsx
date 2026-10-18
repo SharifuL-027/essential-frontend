@@ -11,10 +11,18 @@ const Footer = () => {
           
           {/* Column 1: Brand Info (Full width on mobile to look better, or keep in 1 col) */}
           <div className="col-span-2 md:col-span-1 flex flex-col gap-4 md:gap-6">
-            <Link to="/" className="flex flex-col">
-              <span className="roboto-bold text-3xl md:text-4xl tracking-tighter leading-none text-white">EZ</span>
-              {/* 🔥 নাম পরিবর্তন করে ESSENTIAL ZONE করা হলো */}
-              <span className="text-[10px] md:text-[11px] tracking-[0.3em] md:tracking-[0.4em] roboto-semibold text-cyan-100 mt-1 uppercase">
+            <Link to="/" className="flex flex-col items-start">
+              {/* 🔥 Logo with white background */}
+              <div className="bg-white p-2 md:p-2.5 rounded-lg shadow-md border border-cyan-100 flex items-center justify-center">
+                <img 
+                  src="https://res.cloudinary.com/dsrs8hryx/image/upload/v1791089487/essential-removebg-preview_vcyjui.png" 
+                  alt="Essential Zone Logo" 
+                  className="h-6 md:h-8 w-auto object-contain"
+                />
+              </div>
+              
+              {/* Brand Text */}
+              <span className="text-[10px] md:text-[11px] tracking-[0.3em] md:tracking-[0.4em] roboto-semibold text-cyan-100 mt-2 uppercase ml-1">
                 ESSENTIAL ZONE
               </span>
             </Link>
