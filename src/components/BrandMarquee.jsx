@@ -40,7 +40,7 @@ const BrandMarquee = () => {
         .marquee-track {
           display: flex;
           width: max-content;
-          animation: marqueeScroll 25s linear infinite;
+          animation: marqueeScroll 35s linear infinite;
         }
         .marquee-track:hover {
           animation-play-state: paused;
@@ -51,10 +51,10 @@ const BrandMarquee = () => {
       <div className="relative w-full flex overflow-x-hidden">
         
         {/* Left Edge Gradient Fade */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-linear-to-r from-white to-transparent z-10 pointer-events-none" />
 
         {/* Right Edge Gradient Fade */}
-        <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-linear-to-l from-white to-transparent z-10 pointer-events-none" />
 
         {/* Marquee Infinite Scrolling Track */}
         <div className="marquee-track flex items-center gap-6 md:gap-10">
