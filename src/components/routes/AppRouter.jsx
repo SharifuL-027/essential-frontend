@@ -33,10 +33,12 @@ import AdminSettings from '../../admin/AdminSetting';
 import EditProduct from '../../admin/EditProduct';
 import AdminRoute from '../../admin/AdminRoute'; 
 import WhatsAppButton from '../WhatsAppButton';
+import ScrollToTop from '../ScrollToTop';
 const MainLayout = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar /> 
+      <ScrollToTop/>
       <main>
         <WhatsAppButton/>
         <Outlet />

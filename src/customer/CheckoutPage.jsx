@@ -4,27 +4,38 @@ import { ShoppingBag, ArrowLeft, CheckCircle, Loader2, Truck, User, Phone, Mail,
 import api from '../api/axiosConfig';
 import toast from 'react-hot-toast';
 
+
+const playOrderSuccessSound = () => {
+  try {
+    // public/sounds/checkout-sound.mp3 file-ti play hobe
+    const audio = new Audio('/sounds/jackpot_money_sound.mp3.mpeg');
+    audio.play().catch((err) => {
+      console.error("Audio playback error:", err);
+    });
+  } catch (error) {
+    console.error("Audio error:", error);
+  }
+};
+
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   
-  // 🔥 ডাইনামিক ডেলিভারি চার্জ স্টেট
   const [deliverySettings, setDeliverySettings] = useState({ insideDhaka: 60, outsideDhaka: 120 });
-  const [shippingCost, setShippingCost] = useState(60); // ডিফল্ট Inside Dhaka
+  const [shippingCost, setShippingCost] = useState(60);
 
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     address: '',
-    city: 'Inside Dhaka', // ডিফল্ট ভ্যালু
+    city: 'Inside Dhaka',
     postalCode: '',
     orderNotes: ''
   });
 
-  // পেজ লোড হওয়ার সময় কার্ট এবং ডেলিভারি সেটিংস ফেচ করা
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
     if (savedCart.length === 0) {
@@ -32,13 +43,12 @@ const CheckoutPage = () => {
     }
     setCartItems(savedCart);
 
-    // ব্যাকএন্ড থেকে ডেলিভারি সেটিংস আনা
     const fetchSettings = async () => {
       try {
         const res = await api.get('/settings/delivery');
         if (res.data && res.data.data) {
           setDeliverySettings(res.data.data);
-          setShippingCost(res.data.data.insideDhaka); // ডিফল্ট চার্জ সেট করা
+          setShippingCost(res.data.data.insideDhaka);
         }
       } catch (error) {
         console.error('Failed to fetch delivery settings', error);
@@ -51,7 +61,6 @@ const CheckoutPage = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    // 🔥 ইউজার সিটি পরিবর্তন করলে শিপিং কস্ট আপডেট করা
     if (name === 'city') {
       if (value === 'Inside Dhaka') {
         setShippingCost(deliverySettings.insideDhaka);
@@ -94,9 +103,11 @@ const CheckoutPage = () => {
     };
 
     try {
-      // 🔥 ব্যাকএন্ডের রেসপন্সটা res ভেরিয়েবলে রাখলাম
       const res = await api.post('/orders', orderData);
       
+      // 🔊 Single sound play hobe checkout complete hole
+      playOrderSuccessSound();
+
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('storage'));
       
@@ -105,25 +116,17 @@ const CheckoutPage = () => {
         iconTheme: { primary: '#06b6d4', secondary: '#fff' }
       });
       
-      // ==========================================
-      // 🔥 NEW LOGIC: গেস্ট ইউজারদের অর্ডার লোকাল স্টোরেজে সেভ করা
-      // ==========================================
       const userStr = localStorage.getItem('user');
       if (!userStr) {
-        // যদি লগইন করা না থাকে (গেস্ট), তাহলে তার অর্ডার ব্রাউজারে সেভ করে রাখবো
         const guestOrders = JSON.parse(localStorage.getItem('guestOrders')) || [];
-        const newOrder = res.data?.data || res.data; // ডাটাবেস থেকে আসা নতুন অর্ডার
-        
-        // যদি ব্যাকএন্ড নতুন অর্ডারটা সরাসরি রেসপন্সে না পাঠায়, তবে আমরা লোকাল orderData সেভ করবো
+        const newOrder = res.data?.data || res.data;
         const orderToSave = newOrder?._id ? newOrder : { ...orderData, _id: Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString(), isDelivered: false };
         
-        guestOrders.unshift(orderToSave); // লিস্টের শুরুতে অ্যাড করা হলো
+        guestOrders.unshift(orderToSave);
         localStorage.setItem('guestOrders', JSON.stringify(guestOrders));
       }
       
       setLoading(false);
-      
-      // 🔥 এখন লগইন করা থাকুক বা না থাকুক (গেস্ট), সোজা My Account পেজেই যাবে
       navigate('/account');
       
     } catch (error) {
@@ -154,7 +157,6 @@ const CheckoutPage = () => {
 
         <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Side: Billing Details */}
           <div className="lg:col-span-7 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 border-b border-gray-100 pb-3">
               <Truck className="w-5 h-5 text-cyan-600" /> Billing & Shipping Details
@@ -210,7 +212,6 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              {/* 🔥 City Dropdown & Postal Code */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Town / City *</label>
@@ -271,7 +272,6 @@ const CheckoutPage = () => {
             </div>
           </div>
 
-          {/* Right Side: Order Summary */}
           <div className="lg:col-span-5 space-y-6">
             
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">

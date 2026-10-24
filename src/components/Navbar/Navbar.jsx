@@ -113,8 +113,9 @@ const Navbar = () => {
               alt="Essential Zone Logo" 
               className="h-10 w-auto object-contain"
             />
+            <h2 className="uppercase roboto-bold hidden sm:block">Essential Zone</h2>
           </Link>
-          <h2 className="uppercase roboto-bold hidden sm:block">Essential Zone</h2>
+          
         </div>
 
         {/* Center Side: Navigation & Dropdowns (Desktop Only) */}
