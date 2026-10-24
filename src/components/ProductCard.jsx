@@ -78,14 +78,10 @@ const ProductCard = ({ product }) => {
 
         {/* Top Left Badges (Cyan Colors) */}
         <div className="absolute top-2 left-2 md:top-4 md:left-4 flex flex-col gap-1 z-10 pointer-events-none">
-          {product.stock <= 0 ? (
-             <span className="bg-red-500 text-white text-[9px] md:text-[11px] roboto-bold px-1.5 md:px-2 py-0.5 md:py-1 shadow-sm uppercase tracking-wider rounded-sm">
-               Out of Stock
-             </span>
-          ) : (
-             <span className="bg-cyan-500 text-white text-[9px] md:text-[11px] roboto-bold px-1.5 md:px-2 py-0.5 md:py-1 shadow-sm uppercase tracking-wider rounded-sm">
-               Pre-Order
-             </span>
+          {product.stock <= 0 && (
+            <span className="bg-red-500 text-white text-[9px] md:text-[11px] roboto-bold px-1.5 md:px-2 py-0.5 md:py-1 shadow-sm uppercase tracking-wider rounded-sm w-max">
+              Out of Stock
+            </span>
           )}
           {discount > 0 && (
             <span className="bg-cyan-600 text-white text-[9px] md:text-[11px] roboto-bold px-1.5 md:px-2 py-0.5 md:py-1 shadow-sm w-max rounded-sm">

@@ -30,36 +30,37 @@ const Hero = () => {
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
 
             <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="text-3xl lg:text-4xl roboto-bold text-gray-900 tracking-tight leading-[1.3] mb-4 flex flex-col" // mb-5 থেকে mb-4
-            >
-              <span>আপনার ডিজিটাল জীবন হোক</span>
-              
-              <span className="grid mt-2"> {/* mt-4 থেকে mt-2 */}
-                <AnimatePresence>
-                  <motion.span
-                    key={wordIndex}
-                    initial={{ y: 30, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -30, opacity: 0 }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                    className="col-start-1 row-start-1 text-transparent bg-clip-text bg-linear-to-r from-gray-900 to-gray-500"
-                  >
-                    {changingWords[wordIndex]}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
-            </motion.h1>
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.8, delay: 0.1 }}
+  className="text-3xl lg:text-4xl roboto-bold text-gray-900 tracking-tight leading-[1.4] mb-4 flex flex-col"
+>
+  <span>আপনার ডিজিটাল জীবন হোক</span>
+  
+  {/* 🔥 overflow-visible এবং py-2 যোগ করা হয়েছে যাতে অ্যানিমেশন ও টেক্সট কেটে না যায় */}
+  <span className="grid mt-2 relative overflow-visible py-2"> 
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={wordIndex}
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -20, opacity: 0 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+        className="col-start-1 row-start-1 text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-gray-800 py-1 inline-block"
+      >
+        {changingWords[wordIndex]}
+      </motion.span>
+    </AnimatePresence>
+  </span>
+</motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-base lg:text-lg text-gray-600 mb-6 max-w-md roboto-medium leading-relaxed" // mb-10 থেকে mb-6
+              className="text-base lg:text-lg text-gray-600 mb-6 max-w-md roboto-medium leading-relaxed" 
             >
-              আধুনিক প্রযুক্তি এবং মিনিমালিস্ট ডিজাইনের এক অপূর্ব সংমিশ্রণ উপভোগ করুন। <span className="roboto-bold text-cyan-400">Essential ZONE</span> এ খুঁজুন আপনার প্রতিদিনের জন্য সেরা সব প্রিমিয়াম গ্যাজেট।
+              আধুনিক প্রযুক্তি এবং মিনিমালিস্ট ডিজাইনের এক অপূর্ব সংমিশ্রণ উপভোগ করুন। <span className="roboto-bold text-cyan-400">Essential Zone</span> এ খুঁজুন আপনার প্রতিদিনের জন্য সেরা সব প্রিমিয়াম গ্যাজেট।
             </motion.p>
 
             <motion.div

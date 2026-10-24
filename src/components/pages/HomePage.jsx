@@ -4,6 +4,7 @@ import Hero from '../Hero/Hero';
 import ProductCard from '../ProductCard'; 
 import { Loader2, Filter, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
+import BrandMarquee from '../BrandMarquee';
 
 // 🔥 ডান-বাম স্ক্রল করার জন্য স্পেশাল স্লাইডার কম্পোনেন্ট
 const CategorySlider = ({ title, products }) => {
@@ -143,6 +144,7 @@ const HomePage = () => {
     <div className="w-full bg-[#FAFAFA]">
       
       <Hero />
+      <BrandMarquee/>
       
       {/* 🔥 Width বাড়িয়ে 1400px থেকে 1700px করা হয়েছে যাতে ৬টি প্রোডাক্ট সুন্দরভাবে ফিট হয় */}
       <div className="max-w-[1700px] mx-auto px-4 md:px-6 py-12">
