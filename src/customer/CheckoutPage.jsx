@@ -171,7 +171,7 @@ const CheckoutPage = () => {
                     type="text" 
                     name="name" 
                     required 
-                    placeholder="e.g. Md. Shariful Islam"
+                    placeholder="e.g. Your name"
                     value={formData.name}
                     onChange={handleInputChange}
                     className="w-full pl-10 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"

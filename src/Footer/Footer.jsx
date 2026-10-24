@@ -85,7 +85,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2.5 text-cyan-50 break-all">
                 <Mail className="w-4 h-4 md:w-5 md:h-5 text-white shrink-0" />
-                <span className="roboto-medium text-xs md:text-sm">support@essentialbd.com</span>
+                <span className="roboto-medium text-xs md:text-sm">info@essentialzonebd.com</span>
               </li>
             </ul>
           </div>

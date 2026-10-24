@@ -40,7 +40,7 @@ const BrandMarquee = () => {
         .marquee-track {
           display: flex;
           width: max-content;
-          animation: marqueeScroll 35s linear infinite;
+          animation: marqueeScroll 40s linear infinite;
         }
         .marquee-track:hover {
           animation-play-state: paused;
