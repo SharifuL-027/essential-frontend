@@ -25,7 +25,7 @@ const BrandMarquee = () => {
     return null;
   }
 
-  // ওভারল্যাপ দূর করার জন্য ব্র্যান্ড লিস্টকে দ্বিগুণ করা হলো যাতে -50% ট্রান্সলেশনে পারফেক্ট লুপ হয়
+
   const duplicatedBrands = [...brands, ...brands];
 
   return (
