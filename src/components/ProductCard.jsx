@@ -68,11 +68,11 @@ const ProductCard = ({ product }) => {
       <div className="relative bg-[#cfd4dc] aspect-[4/5] flex justify-center items-center overflow-hidden mb-3 md:mb-4 rounded-md">
         
         {/* Clickable Image */}
-        <Link to={`/product/${product._id}`} className="absolute inset-0 flex justify-center items-center z-0 p-4 sm:p-6 md:p-8">
+        <Link to={`/product/${product._id}`} className="absolute inset-0 flex justify-center items-center z-0 p-2 sm:p-4">
           <img 
             src={product.image || product.images?.[0] || "https://placehold.co/300"} 
             alt={product.name} 
-            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-contain mix-blend-multiply hover:scale-[1.15] transition-transform duration-500 ease-out"
           />
         </Link>
 
