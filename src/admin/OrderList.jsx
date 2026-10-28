@@ -101,19 +101,35 @@ const OrderList = () => {
                 </div>
               </div>
 
-              {/* Customer & Total Info */}
-              <div className="flex justify-between items-center text-sm">
-                <div>
-                  <p className="font-bold text-gray-800 capitalize">{order.shippingAddress?.name || 'Guest'}</p>
-                  <p className="text-xs text-gray-500">{order.shippingAddress?.phone}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-black text-cyan-600 text-base">৳ {order.totalPrice?.toLocaleString()}</p>
-                  <p className="text-[10px] font-medium text-gray-400">
-                    {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </p>
-                </div>
-              </div>
+             {/* Customer & Total Info */}
+<div className="flex justify-between items-center text-sm">
+  <div>
+    <p className="font-bold text-gray-800 capitalize">{order.shippingAddress?.name || 'Guest'}</p>
+    <p className="text-xs text-gray-500">{order.shippingAddress?.phone}</p>
+  </div>
+  <div className="text-right">
+    <p className="font-black text-cyan-600 text-base">৳ {order.totalPrice?.toLocaleString()}</p>
+    <p className="text-[11px] font-medium text-gray-500 flex items-center justify-end gap-1.5">
+      <span>
+        {new Date(order.createdAt).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'Asia/Dhaka',
+        })}
+      </span>
+      <span className="text-gray-300">•</span>
+      <span>
+        {new Date(order.createdAt).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+          timeZone: 'Asia/Dhaka',
+        })}
+      </span>
+    </p>
+  </div>
+</div>
 
               {/* Products List (Mobile) */}
               <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
@@ -216,9 +232,24 @@ const OrderList = () => {
                     </div>
                   </td>
 
-                  <td className="p-4 text-gray-500 text-xs font-medium whitespace-nowrap">
-                    {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </td>
+                 <td className="p-4 whitespace-nowrap">
+  <p className="text-xs font-medium text-gray-600">
+    {new Date(order.createdAt).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Dhaka',
+    })}
+  </p>
+  <p className="text-[11px] text-gray-400 mt-0.5">
+    {new Date(order.createdAt).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Dhaka',
+    })}
+  </p>
+</td>
                   
                   <td className="p-4 font-black text-cyan-600 whitespace-nowrap">
                     ৳ {order.totalPrice?.toLocaleString()}

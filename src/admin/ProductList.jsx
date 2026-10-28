@@ -25,7 +25,7 @@ const ProductList = () => {
       await api.delete(`/products/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-products']); // ডিলিট হলে অটো রিফ্রেশ
+      queryClient.invalidateQueries(['admin-products']); 
       toast.success('Product deleted successfully!');
     },
     onError: () => {
