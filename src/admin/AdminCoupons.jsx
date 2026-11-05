@@ -64,17 +64,17 @@ const AdminCoupons = () => {
           <label className="block text-xs roboto-bold text-gray-600 mb-2 uppercase tracking-wide">Discount Amount (৳)</label>
           <input 
             type="number" required value={formData.discount} onChange={(e) => setFormData({...formData, discount: e.target.value})}
-            className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:border-[#6b21a8] roboto-medium" placeholder="500" 
+            className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:border-cyan-600 roboto-medium" placeholder="500" 
           />
         </div>
         <div>
           <label className="block text-xs roboto-bold text-gray-600 mb-2 uppercase tracking-wide">Expiry Date</label>
           <input 
             type="date" required value={formData.expiryDate} onChange={(e) => setFormData({...formData, expiryDate: e.target.value})}
-            className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:border-[#6b21a8] roboto-medium" 
+            className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:border-cyan-600 roboto-medium" 
           />
         </div>
-        <button type="submit" className="bg-[#6b21a8] text-white p-3 rounded-xl roboto-bold shadow-sm hover:bg-purple-800 transition flex items-center justify-center gap-2 h-[50px]">
+        <button type="submit" className="bg-cyan-600 text-white p-3 rounded-xl roboto-bold shadow-sm hover:bg-purple-800 transition flex items-center justify-center gap-2 h-[50px]">
           <Plus className="w-4 h-4" /> Add Coupon
         </button>
       </form>
@@ -98,7 +98,7 @@ const AdminCoupons = () => {
               {coupons.map((coupon) => (
                 <tr key={coupon._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
                   <td className="p-4 roboto-bold text-gray-900">{coupon.code}</td>
-                  <td className="p-4 roboto-medium text-[#6b21a8]">৳ {coupon.discount}</td>
+                  <td className="p-4 roboto-medium text-cyan-600">৳ {coupon.discount}</td>
                   <td className="p-4 roboto-medium text-gray-600">{new Date(coupon.expiryDate).toLocaleDateString()}</td>
                   <td className="p-4">
                     <span className={`text-[10px] roboto-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${new Date(coupon.expiryDate) < new Date() ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>

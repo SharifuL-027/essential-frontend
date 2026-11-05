@@ -21,7 +21,7 @@ const AdminLayout = () => {
       {/* Sidebar (Desktop Only) */}
       <aside className="w-64 bg-white border-r border-gray-100 hidden md:flex flex-col fixed inset-y-0 left-0 z-40 h-full">
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto mt-2 custom-scrollbar">
-          <p className="px-4 text-xs font-bold tracking-widest text-gray-400 mb-4">ADMIN MENU</p>
+          <p className="px-4 text-xs font-bold tracking-widest text-gray-700 mb-4">ADMIN MENU</p>
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/admin');
             return (

@@ -60,7 +60,7 @@ const CategoryManager = () => {
               <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Slug</label>
               <input type="text" value={slug} onChange={(e) => setSlug(e.target.value)} required className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:border-[#6b21a8]" placeholder="smart-watch" />
             </div>
-            <button type="submit" disabled={addMutation.isPending} className="w-full bg-[#6b21a8] text-white py-2.5 rounded-lg font-bold hover:bg-purple-800 transition flex justify-center items-center gap-2">
+            <button type="submit" disabled={addMutation.isPending} className="w-full bg-cyan-600 text-white py-2.5 rounded-lg font-bold hover:bg-purple-800 transition flex justify-center items-center gap-2">
               {addMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" /> Save Category</>}
             </button>
           </div>
@@ -70,7 +70,7 @@ const CategoryManager = () => {
       {/* List */}
       <div className="md:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {isLoading ? (
-           <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 text-[#6b21a8] animate-spin" /></div>
+           <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 text-cyan-600 animate-spin" /></div>
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
