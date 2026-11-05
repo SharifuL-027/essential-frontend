@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axiosConfig';
-import { ShoppingCart, Loader2, CheckCircle, XCircle, Truck, Package, Search } from 'lucide-react';
+import { ShoppingCart, Loader2, CheckCircle, XCircle, Package, Search, Clock, Truck, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const OrderList = () => {
@@ -19,24 +19,25 @@ const OrderList = () => {
     refetchOnWindowFocus: false, 
   });
 
-  // ডেলিভারি স্ট্যাটাস আপডেট করার মিউটেশন
-  const deliverMutation = useMutation({
-    mutationFn: async (id) => {
-      await api.put(`/orders/${id}/deliver`);
+  // 🔥 ৩টি স্টেপের স্ট্যাটাস আপডেট করার মিউটেশন
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }) => {
+      // ব্যাকএন্ডে এই API টি থাকতে হবে যা status আপডেট করবে
+      await api.put(`/orders/${id}/status`, { status });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['admin-orders']);
-      toast.success('Order marked as delivered! 📦', { 
+      toast.success(`Order status updated to ${variables.status}! 🚀`, { 
         style: { border: '1px solid #67e8f9', color: '#0891b2' }, 
         iconTheme: { primary: '#06b6d4', secondary: '#fff' } 
       });
     },
     onError: () => {
-      toast.error('Failed to update delivery status!');
+      toast.error('Failed to update order status!');
     }
   });
 
-  // 🔍 সার্চ ফিল্টার লজিক (Order ID, Customer Name, Phone Number দিয়ে সার্চ করা যাবে)
+  // 🔍 সার্চ ফিল্টার লজিক
   const filteredOrders = orders.filter((order) => {
     const searchLower = searchQuery.toLowerCase();
     const orderIdMatch = order._id.toLowerCase().includes(searchLower);
@@ -45,6 +46,25 @@ const OrderList = () => {
     
     return orderIdMatch || nameMatch || phoneMatch;
   });
+
+  // স্ট্যাটাস অনুযায়ী ব্যাজ (Badge) এর কালার ঠিক করার ফাংশন
+  const getStatusBadge = (status, isDelivered) => {
+    // আগের ডাটাবেস অনুযায়ী যদি status না থাকে কিন্তু isDelivered true থাকে
+    if (isDelivered && !status) return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider w-max bg-green-100 text-green-700"><CheckCircle2 className="w-3 h-3"/> Delivered</span>;
+    
+    switch (status) {
+      case 'Processing':
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider w-max bg-blue-100 text-blue-700"><Clock className="w-3 h-3"/> Processing</span>;
+      case 'Shipped':
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider w-max bg-yellow-100 text-yellow-700"><Truck className="w-3 h-3"/> Shipped</span>;
+      case 'Delivered':
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider w-max bg-green-100 text-green-700"><CheckCircle2 className="w-3 h-3"/> Delivered</span>;
+      case 'Cancelled':
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider w-max bg-red-100 text-red-700"><XCircle className="w-3 h-3"/> Cancelled</span>;
+        default:
+        return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider w-max bg-gray-100 text-gray-700"><Package className="w-3 h-3"/> Pending</span>;
+    }
+  };
 
   if (isLoading) return <div className="flex h-[60vh] items-center justify-center"><Loader2 className="w-10 h-10 text-cyan-600 animate-spin" /></div>;
 
@@ -57,7 +77,7 @@ const OrderList = () => {
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-cyan-600" /> All Orders
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Manage and track customer orders.</p>
+          <p className="text-sm text-gray-500 mt-1">Manage and track customer orders in 3 steps.</p>
         </div>
         
         {/* 🔍 Search Input */}
@@ -95,78 +115,50 @@ const OrderList = () => {
                     {order.isPaid ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                     {order.isPaid ? 'Paid' : 'Unpaid'}
                   </span>
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${order.isDelivered ? 'bg-cyan-100 text-cyan-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                    {order.isDelivered ? 'Delivered' : 'Pending'}
-                  </span>
+                  {getStatusBadge(order.status, order.isDelivered)}
                 </div>
               </div>
 
              {/* Customer & Total Info */}
-<div className="flex justify-between items-center text-sm">
-  <div>
-    <p className="font-bold text-gray-800 capitalize">{order.shippingAddress?.name || 'Guest'}</p>
-    <p className="text-xs text-gray-500">{order.shippingAddress?.phone}</p>
-  </div>
-  <div className="text-right">
-    <p className="font-black text-cyan-600 text-base">৳ {order.totalPrice?.toLocaleString()}</p>
-    <p className="text-[11px] font-medium text-gray-500 flex items-center justify-end gap-1.5">
-      <span>
-        {new Date(order.createdAt).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-          timeZone: 'Asia/Dhaka',
-        })}
-      </span>
-      <span className="text-gray-300">•</span>
-      <span>
-        {new Date(order.createdAt).toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-          timeZone: 'Asia/Dhaka',
-        })}
-      </span>
-    </p>
-  </div>
-</div>
-
-              {/* Products List (Mobile) */}
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Ordered Items</p>
-                <div className="flex flex-col gap-2">
-                  {order.orderItems && order.orderItems.length > 0 ? (
-                    order.orderItems.map((item, index) => (
-                      <div key={index} className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
-                        <div className="w-10 h-10 bg-gray-50 rounded-md border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <Package className="w-5 h-5 text-gray-400" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-gray-800 truncate" title={item.name}>{item.name}</p>
-                          <p className="text-[10px] text-gray-500 font-medium">Qty: {item.quantity || 1} × ৳{item.price?.toLocaleString()}</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-xs text-gray-400 italic">Product info missing</span>
-                  )}
+              <div className="flex justify-between items-center text-sm">
+                <div>
+                  <p className="font-bold text-gray-800 capitalize">{order.shippingAddress?.name || 'Guest'}</p>
+                  <p className="text-xs text-gray-500">{order.shippingAddress?.phone}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-black text-cyan-600 text-base">৳ {order.totalPrice?.toLocaleString()}</p>
+                  <p className="text-[11px] font-medium text-gray-500 flex items-center justify-end gap-1.5">
+                    <span>
+                      {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Dhaka' })}
+                    </span>
+                    <span className="text-gray-300">•</span>
+                    <span>
+                      {new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Dhaka' })}
+                    </span>
+                  </p>
                 </div>
               </div>
 
-              {/* Action Button (Mobile) */}
-              {!order.isDelivered && (
-                <button 
-                  onClick={() => { if(window.confirm('Are you sure you want to mark this order as delivered?')) deliverMutation.mutate(order._id); }}
-                  disabled={deliverMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2 bg-cyan-50 text-cyan-600 border border-cyan-200 hover:bg-cyan-600 hover:text-white py-3 rounded-lg text-xs font-bold transition-colors shadow-sm disabled:opacity-50"
-                >
-                  {deliverMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />} 
-                  Mark as Delivered
-                </button>
+              {/* Action Dropdown (Mobile) */}
+              {order.status !== 'Delivered' && (
+                <div className="mt-2">
+                  <select 
+                    value={order.status || 'Pending'}
+                    onChange={(e) => {
+                      if(window.confirm(`Are you sure you want to change status to ${e.target.value}?`)) {
+                        updateStatusMutation.mutate({ id: order._id, status: e.target.value });
+                      }
+                    }}
+                    disabled={updateStatusMutation.isPending}
+                    className="w-full bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-lg px-3 py-2.5 outline-none focus:border-cyan-500 cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
               )}
             </div>
           ))
@@ -184,7 +176,7 @@ const OrderList = () => {
               <th className="p-4 whitespace-nowrap">Date</th>
               <th className="p-4 whitespace-nowrap">Total</th>
               <th className="p-4 whitespace-nowrap">Status</th>
-              <th className="p-4 text-right whitespace-nowrap">Action</th>
+              <th className="p-4 text-right whitespace-nowrap">Update Status</th>
             </tr>
           </thead>
           <tbody className="text-sm divide-y divide-gray-50">
@@ -232,24 +224,14 @@ const OrderList = () => {
                     </div>
                   </td>
 
-                 <td className="p-4 whitespace-nowrap">
-  <p className="text-xs font-medium text-gray-600">
-    {new Date(order.createdAt).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      timeZone: 'Asia/Dhaka',
-    })}
-  </p>
-  <p className="text-[11px] text-gray-400 mt-0.5">
-    {new Date(order.createdAt).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Dhaka',
-    })}
-  </p>
-</td>
+                  <td className="p-4 whitespace-nowrap">
+                    <p className="text-xs font-medium text-gray-600">
+                      {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Dhaka' })}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      {new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Dhaka' })}
+                    </p>
+                  </td>
                   
                   <td className="p-4 font-black text-cyan-600 whitespace-nowrap">
                     ৳ {order.totalPrice?.toLocaleString()}
@@ -261,23 +243,30 @@ const OrderList = () => {
                         {order.isPaid ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                         {order.isPaid ? 'Paid' : 'Unpaid'}
                       </span>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider w-max ${order.isDelivered ? 'bg-cyan-100 text-cyan-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {order.isDelivered ? 'Delivered' : 'Pending'}
-                      </span>
+                      {getStatusBadge(order.status, order.isDelivered)}
                     </div>
                   </td>
 
                   <td className="p-4 text-right align-middle whitespace-nowrap">
-                    {!order.isDelivered && (
-                      <button 
-                        onClick={() => { if(window.confirm('Are you sure you want to mark this order as delivered?')) deliverMutation.mutate(order._id); }}
-                        disabled={deliverMutation.isPending}
-                        className="inline-flex items-center justify-center gap-1.5 bg-cyan-50 text-cyan-600 border border-cyan-200 hover:bg-cyan-600 hover:text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm hover:shadow-md disabled:opacity-50"
+                    {order.status !== 'Delivered' && (
+                      <select 
+                        value={order.status || 'Pending'}
+                        onChange={(e) => {
+                          if(window.confirm(`Change order status to ${e.target.value}?`)) {
+                            updateStatusMutation.mutate({ id: order._id, status: e.target.value });
+                          }
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        className="bg-white border border-cyan-200 text-cyan-700 text-xs font-bold rounded-lg px-3 py-2 outline-none focus:border-cyan-500 cursor-pointer shadow-sm hover:shadow-md transition-all disabled:opacity-50"
                       >
-                        {deliverMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />} 
-                        Deliver
-                      </button>
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
                     )}
+                    {updateStatusMutation.isPending && <Loader2 className="w-4 h-4 animate-spin text-cyan-600 inline ml-2" />}
                   </td>
                 </tr>
               ))
