@@ -4,7 +4,7 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react';
 const Footer = () => {
   return (
     <footer className="bg-cyan-500 text-white pt-16 pb-8 md:pt-20 md:pb-10 border-t border-cyan-400">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-6">
+      <div className="max-w-300 mx-auto px-4 md:px-6">
         
         {/* Top Section: 2 Columns on Mobile/Tablet, 4 Columns on Desktop */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">

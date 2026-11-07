@@ -306,14 +306,22 @@ const ProductDetails = () => {
           
           {/* Description */}
           {product.description && (
-  <div className="lg:col-span-8 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 p-8 md:p-10">
+  <div className="lg:col-span-8 min-w-0 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 p-8 md:p-10">
     <h3 className="text-lg roboto-bold text-gray-900 mb-8 flex items-center gap-3">
       <span className="w-1.5 h-6 bg-cyan-600 rounded-full"></span>
       Product Overview
     </h3>
-    <div 
-      /* 🔥 এখানে [&_ul] এবং [&_ol] এর কোডগুলো যুক্ত করা হয়েছে */
-      className="prose max-w-none text-gray-600 roboto-medium text-sm leading-loose overflow-hidden [&_img]:w-full [&_img]:rounded-2xl [&_img]:my-6 [&_img]:shadow-sm [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1.5"
+    <div
+      className="prose max-w-none w-full min-w-0 text-gray-600 roboto-medium text-sm leading-loose
+        [&_*]:!max-w-full
+        [&_*]:!whitespace-normal
+        [&_*]:![word-break:normal]
+        [&_*]:![overflow-wrap:break-word]
+        [&_*]:!w-auto
+        [&_img]:!w-full [&_img]:!h-auto [&_img]:rounded-2xl [&_img]:my-6 [&_img]:shadow-sm
+        [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1.5 [&_p]:mb-4
+        [&_table]:!block [&_table]:overflow-x-auto
+        [&_pre]:!whitespace-pre-wrap"
       dangerouslySetInnerHTML={{ __html: product.description }}
     />
   </div>
