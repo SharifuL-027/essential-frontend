@@ -5,6 +5,36 @@ import api from '../api/axiosConfig';
 import { ShoppingBag, Heart, Loader2, ShieldCheck, Truck, RefreshCw, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast'; 
 
+// 🔥 ফিক্স: &nbsp; থাকলে ব্রাউজার লাইন ব্রেক করতে পারে না, তাই শব্দ মাঝখানে কেটে যায়। এখানে সেগুলো সাধারণ স্পেস করা হলো।
+const cleanDescription = (html) =>
+  (html || '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\u00a0/g, ' ');
+
+// 🔥 ফিক্স: ডেসক্রিপশনের ভেতরের inline style (word-break, white-space) ওভাররাইড করার CSS
+const descriptionCss = `
+  .product-desc,
+  .product-desc * {
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    white-space: normal !important;
+    hyphens: none !important;
+    max-width: 100%;
+  }
+  .product-desc pre {
+    white-space: pre-wrap !important;
+    overflow-wrap: break-word !important;
+  }
+  .product-desc img {
+    width: 100%;
+    height: auto;
+  }
+  .product-desc table {
+    display: block;
+    overflow-x: auto;
+  }
+`;
+
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -136,6 +166,8 @@ const ProductDetails = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] pt-28 pb-20 px-4 md:px-6">
+      <style>{descriptionCss}</style>
+
       <div className="max-w-[1200px] mx-auto">
         
         {/* Breadcrumb */}
@@ -176,14 +208,12 @@ const ProductDetails = () => {
                   <button 
                     key={index}
                     onClick={() => setActiveImage(img)}
-                    // 🔥 ফিক্স: p-1 দেওয়া হয়েছে যাতে বর্ডার থেকে ছবির দূরত্ব থাকে।
                     className={`w-20 h-20 rounded-xl border-2 p-1 flex-shrink-0 transition-all duration-300 bg-white focus:outline-none ${
                       activeImage === img 
                         ? 'border-cyan-600 shadow-md scale-105' 
                         : 'border-transparent hover:border-gray-200 opacity-70 hover:opacity-100'
                     }`}
                   >
-                    {/* 🔥 ফিক্স: ভেতরের div টি নিশ্চিত করবে ছবি কোনোভাবেই বর্ডারের বাইরে যাবে না */}
                     <div className="w-full h-full relative rounded-lg overflow-hidden flex items-center justify-center bg-white">
                       <img src={img} alt="" className="max-w-full max-h-full object-contain" />
                     </div>
@@ -306,26 +336,21 @@ const ProductDetails = () => {
           
           {/* Description */}
           {product.description && (
-  <div className="lg:col-span-8 min-w-0 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 p-8 md:p-10">
-    <h3 className="text-lg roboto-bold text-gray-900 mb-8 flex items-center gap-3">
-      <span className="w-1.5 h-6 bg-cyan-600 rounded-full"></span>
-      Product Overview
-    </h3>
-    <div
-      className="prose max-w-none w-full min-w-0 text-gray-600 roboto-medium text-sm leading-loose
-        [&_*]:!max-w-full
-        [&_*]:!whitespace-normal
-        [&_*]:![word-break:normal]
-        [&_*]:![overflow-wrap:break-word]
-        [&_*]:!w-auto
-        [&_img]:!w-full [&_img]:!h-auto [&_img]:rounded-2xl [&_img]:my-6 [&_img]:shadow-sm
-        [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1.5 [&_p]:mb-4
-        [&_table]:!block [&_table]:overflow-x-auto
-        [&_pre]:!whitespace-pre-wrap"
-      dangerouslySetInnerHTML={{ __html: product.description }}
-    />
-  </div>
-)}
+            <div className="lg:col-span-8 min-w-0 overflow-hidden bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 p-6 md:p-10">
+              <h3 className="text-lg roboto-bold text-gray-900 mb-8 flex items-center gap-3">
+                <span className="w-1.5 h-6 bg-cyan-600 rounded-full"></span>
+                Product Overview
+              </h3>
+              
+              {/* 🔥 ফিক্স: break-words/prose বাদ, product-desc ক্লাস + cleanDescription ব্যবহার করা হলো */}
+              <div
+                className="product-desc text-gray-600 roboto-medium text-sm leading-loose
+                  [&_img]:rounded-2xl [&_img]:my-6 [&_img]:shadow-sm
+                  [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-1.5 [&_p]:mb-4"
+                dangerouslySetInnerHTML={{ __html: cleanDescription(product.description) }}
+              />
+            </div>
+          )}
 
           {/* Specifications Table */}
           <div className="lg:col-span-4">
