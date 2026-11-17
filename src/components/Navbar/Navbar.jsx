@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Lock, Search, ChevronDown, Zap, Flame, Heart, LogOut, LayoutDashboard, User, Loader2, X, ChevronRight, Home, Grid, Tag, Box, Package } from 'lucide-react';
+import { ShoppingBag, Search, ChevronDown, Zap, Flame, Heart, LogOut, LayoutDashboard, User, Loader2, X, Home, Grid, Tag, Box, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -115,7 +115,6 @@ const Navbar = () => {
             />
             <h2 className="uppercase roboto-bold hidden sm:block">Essential Zone</h2>
           </Link>
-          
         </div>
 
         {/* Center Side: Navigation & Dropdowns (Desktop Only) */}
@@ -220,7 +219,7 @@ const Navbar = () => {
         <div className="flex items-center space-x-5 pt-1">
           <div className="hidden md:flex items-center space-x-5">
             
-            {/* 🔥 User Specific Buttons */}
+            {/* User Specific Buttons */}
             {isLoggedIn ? (
               <Link 
                 to={userRole === 'Admin' ? '/admin' : '/account'} 
@@ -230,9 +229,9 @@ const Navbar = () => {
                 {userRole === 'Admin' ? 'Dashboard' : 'My Account'}
               </Link>
             ) : (
-              // 🔥 Guestদের জন্য সরাসরি 'My Orders' (/account) পেজে যাওয়ার বাটন
+              // 🔥 Guestদের জন্য সরাসরি '/track-order' পেজে যাওয়ার বাটন
               <Link 
-                to="/account" 
+                to="/track-order" 
                 className="flex items-center gap-1.5 bg-cyan-50 text-cyan-600 border border-cyan-100 text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-full shadow-sm hover:bg-cyan-100 transition-colors"
               >
                 <Package className="w-3.5 h-3.5" />
@@ -262,7 +261,7 @@ const Navbar = () => {
               )}
             </Link>
             
-            {/* 🔥 Logout or Sign In Button */}
+            {/* Logout or Sign In Button */}
             {isLoggedIn ? (
               <button 
                 onClick={handleLogout} 
@@ -449,13 +448,13 @@ const Navbar = () => {
                   <span className="text-[10px] uppercase font-bold mt-1">Cart</span>
                 </Link>
                 
-                <button onClick={() => setIsSearchOpen(true)} className="flex flex-col items-center text-gray-600 hover:text-cyan-600 transition-colors">
+                <button onClick={() => { setIsSearchOpen(true); setIsMenuOpen(false); }} className="flex flex-col items-center text-gray-600 hover:text-cyan-600 transition-colors">
                   <Search className="w-6 h-6" />
                   <span className="text-[10px] uppercase font-bold mt-1">Search</span>
                 </button>
               </div>
 
-              {/* 🔥 Mobile Auth Buttons */}
+              {/* Mobile Auth Buttons */}
               {isLoggedIn ? (
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
                   <Link to={userRole === 'Admin' ? '/admin' : '/account'} onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 bg-cyan-600 text-white py-2.5 rounded-md text-xs font-bold uppercase hover:bg-cyan-700 transition">
@@ -467,7 +466,8 @@ const Navbar = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
-                  <Link to="/account" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-1.5 bg-cyan-50 text-cyan-600 border border-cyan-100 py-2.5 rounded-md text-xs font-bold uppercase hover:bg-cyan-100 transition-colors">
+                  {/* 🔥 মোবাইল মেনুতেও গেস্টদের জন্য '/track-order' */}
+                  <Link to="/track-order" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-1.5 bg-cyan-50 text-cyan-600 border border-cyan-100 py-2.5 rounded-md text-xs font-bold uppercase hover:bg-cyan-100 transition-colors">
                     <Package className="w-4 h-4" /> My Orders
                   </Link>
                   <Link to="/login" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-1.5 bg-cyan-600 text-white py-2.5 rounded-md text-xs font-bold uppercase hover:bg-cyan-700 transition">

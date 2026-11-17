@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingCart } from 'lucide-react';
-import api from '../api/axiosConfig'; 
+import api from '../api/axiosConfig';
+import toast from 'react-hot-toast';
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -13,27 +14,68 @@ const CartPage = () => {
   const [couponMessage, setCouponMessage] = useState('');
   const [isCouponApplied, setIsCouponApplied] = useState(false);
 
-  // পেজ লোড হওয়ার সময় লোকালস্টোরেজ থেকে কার্ট ডেটা লোড করা
+  // পেজ লোড হওয়ার সময় লোকালস্টোরেজ থেকে কার্ট লোড + সার্ভার থেকে লাইভ স্টক সিঙ্ক করা
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
     setCartItems(savedCart);
+
+    const syncLiveStock = async () => {
+      if (savedCart.length === 0) return;
+      try {
+        const updatedCart = await Promise.all(
+          savedCart.map(async (item) => {
+            try {
+              const res = await api.get(`/products/${item._id}`);
+              const freshProduct = res.data?.data || res.data;
+              const liveStock = Number(freshProduct?.stock ?? item.stock ?? 0);
+              return {
+                ...item,
+                stock: liveStock,
+                // স্টক যদি কার্টের সংখ্যার চেয়ে কমে যায় তবে তা স্টকের সমান করে দেবে
+                quantity: liveStock > 0 ? Math.min(item.quantity || 1, liveStock) : (item.quantity || 1),
+              };
+            } catch {
+              return item;
+            }
+          })
+        );
+        setCartItems(updatedCart);
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+      } catch (err) {
+        console.error('Failed to sync live stock:', err);
+      }
+    };
+
+    syncLiveStock();
   }, []);
 
-  // পরিমাণ (Quantity) বাড়ানো
+  // পরিমাণ (Quantity) বাড়ানো (স্টক চেক সহ)
   const increaseQty = (id) => {
-    const updated = cartItems.map(item => {
+    const updated = cartItems.map((item) => {
       if (item._id === id) {
-        return { ...item, quantity: (item.quantity || 1) + 1 };
+        const availableStock = Number(item.stock ?? 0);
+        const currentQty = Number(item.quantity || 1);
+
+        if (availableStock <= 0) {
+          toast.error('This product is currently out of stock!');
+          return item;
+        }
+        if (currentQty >= availableStock) {
+          toast.error(`Maximum stock reached! Only ${availableStock} available.`);
+          return item;
+        }
+        return { ...item, quantity: currentQty + 1 };
       }
       return item;
     });
     setCartItems(updated);
     localStorage.setItem('cart', JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage'));
   };
 
   // পরিমাণ (Quantity) কমানো
   const decreaseQty = (id) => {
-    const updated = cartItems.map(item => {
+    const updated = cartItems.map((item) => {
       if (item._id === id && item.quantity > 1) {
         return { ...item, quantity: item.quantity - 1 };
       }
@@ -41,16 +83,18 @@ const CartPage = () => {
     });
     setCartItems(updated);
     localStorage.setItem('cart', JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage'));
   };
 
   // কার্ট থেকে নির্দিষ্ট আইটেম রিমুভ করা
   const removeItem = (id) => {
-    const updated = cartItems.filter(item => item._id !== id);
+    const updated = cartItems.filter((item) => item._id !== id);
     setCartItems(updated);
     localStorage.setItem('cart', JSON.stringify(updated));
+    window.dispatchEvent(new Event('storage'));
   };
 
-  // 🔥 কুপন ভেরিফাই ও অ্যাপ্লাই করার হ্যান্ডলার
+  // কুপন ভেরিফাই ও অ্যাপ্লাই করার হ্যান্ডলার
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
     setCouponMessage('');
@@ -60,7 +104,7 @@ const CartPage = () => {
     try {
       const res = await api.get(`/coupons/${couponCode}`);
       const discountAmount = res.data.discount || 0;
-      
+
       setDiscount(discountAmount);
       setIsCouponApplied(true);
       setCouponMessage(res.data.message || 'Coupon applied successfully! 🎉');
@@ -72,10 +116,15 @@ const CartPage = () => {
     }
   };
 
+  // কোনো আইটেম Out of Stock আছে কি না চেক
+  const hasOutOfStockItem = cartItems.some(
+    (item) => Number(item.stock ?? 0) <= 0 || Number(item.quantity || 1) > Number(item.stock ?? 0)
+  );
+
   // মোট দাম হিসাব করা
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
-  const shipping = subtotal > 0 ? 100 : 0; 
-  const grandTotal = Math.max(0, subtotal - discount + shipping); 
+  const subtotal = cartItems.reduce((acc, item) => acc + item.price * (item.quantity || 1), 0);
+  const shipping = subtotal > 0 ? 100 : 0;
+  const grandTotal = Math.max(0, subtotal - discount + shipping);
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] pt-28 pb-20 px-4 md:px-6">
@@ -107,75 +156,102 @@ const CartPage = () => {
             
             {/* Left Side: Cart Items List */}
             <div className="lg:col-span-2 space-y-5">
-              {cartItems.map((item) => (
-                <div key={item._id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100/80 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all hover:shadow-md">
-                  
-                  <div className="flex items-center gap-5 w-full sm:w-auto">
-                    
-                    {/* 3D Hover Flip Image Container */}
-                    <div className="group relative w-24 h-24 rounded-xl shrink-0 cursor-pointer perspective-[1000px]">
-                      <div className="w-full h-full transition-transform duration-700 ease-in-out transform-3d group-hover:transform-[rotateY(180deg)]">
-                        
-                        {/* Front (Main Image) */}
-                        <div className="absolute inset-0 backface-hidden">
-                          <img 
-                            src={item.image || 'https://placehold.co/100x100'} 
-                            alt={item.name} 
-                            className="w-full h-full object-cover rounded-xl border border-gray-100 bg-white shadow-sm" 
-                          />
+              {cartItems.map((item) => {
+                const availableStock = Number(item.stock ?? 0);
+                const currentQty = Number(item.quantity || 1);
+                const isItemOutOfStock = availableStock <= 0;
+                const isMaxReached = currentQty >= availableStock;
+
+                return (
+                  <div
+                    key={item._id}
+                    className={`bg-white p-5 rounded-2xl shadow-sm border flex flex-col sm:flex-row items-center justify-between gap-6 transition-all hover:shadow-md ${
+                      isItemOutOfStock ? 'border-red-200 bg-red-50/20' : 'border-gray-100/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-5 w-full sm:w-auto">
+                      
+                      {/* 3D Hover Flip Image Container */}
+                      <div className="group relative w-24 h-24 rounded-xl shrink-0 cursor-pointer perspective-[1000px]">
+                        <div className="w-full h-full transition-transform duration-700 ease-in-out transform-3d group-hover:transform-[rotateY(180deg)]">
+                          <div className="absolute inset-0 backface-hidden">
+                            <img 
+                              src={item.image || 'https://placehold.co/100x100'} 
+                              alt={item.name} 
+                              className="w-full h-full object-cover rounded-xl border border-gray-100 bg-white shadow-sm" 
+                            />
+                          </div>
+                          <div className="absolute inset-0 backface-hidden transform-[rotateY(180deg)]">
+                            <img 
+                              src={item.images?.[1] || item.image || 'https://placehold.co/100x100'} 
+                              alt={`${item.name} alternate`} 
+                              className="w-full h-full object-cover rounded-xl border border-gray-100 bg-white shadow-sm" 
+                            />
+                          </div>
                         </div>
+                      </div>
+
+                      <div className="flex-1">
+                        <h3 className="roboto-bold text-gray-900 text-[15px] line-clamp-2 leading-snug hover:text-cyan-600 transition-colors cursor-pointer">
+                          {item.name}
+                        </h3>
+                        <p className="text-cyan-600 roboto-bold text-sm mt-1.5">৳ {item.price?.toLocaleString()}</p>
                         
-                        {/* Back (2nd Image) */}
-                        <div className="absolute inset-0 backface-hidden transform-[rotateY(180deg)]">
-                          <img 
-                            src={item.images?.[1] || item.image || 'https://placehold.co/100x100'} 
-                            alt={`${item.name} alternate`} 
-                            className="w-full h-full object-cover rounded-xl border border-gray-100 bg-white shadow-sm" 
-                          />
-                        </div>
-                        
+                        {/* স্টক স্ট্যাটাস ব্যাজ */}
+                        {isItemOutOfStock ? (
+                          <span className="inline-block mt-1.5 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
+                            Out of Stock (Please remove)
+                          </span>
+                        ) : (
+                          <span className="inline-block mt-1 text-[11px] font-medium text-gray-500">
+                            Available Stock: <strong className="text-gray-700">{availableStock}</strong>
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex-1">
-                      <h3 className="roboto-bold text-gray-900 text-[15px] line-clamp-2 leading-snug hover:text-cyan-600 transition-colors cursor-pointer">
-                        {item.name}
-                      </h3>
-                      <p className="text-cyan-600 roboto-bold text-sm mt-1.5">৳ {item.price?.toLocaleString()}</p>
+                    {/* Controls & Price */}
+                    <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
+                      
+                      {/* Quantity Controls (Clamped to stock) */}
+                      <div className="flex items-center border border-gray-200 rounded-xl p-1 bg-gray-50">
+                        <button
+                          type="button"
+                          onClick={() => decreaseQty(item._id)}
+                          disabled={isItemOutOfStock || currentQty <= 1}
+                          className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition text-gray-600 shadow-sm hover:text-gray-900 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="w-10 text-center text-sm roboto-bold text-gray-800">{currentQty}</span>
+                        <button
+                          type="button"
+                          onClick={() => increaseQty(item._id)}
+                          disabled={isItemOutOfStock || isMaxReached}
+                          className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition text-gray-600 shadow-sm hover:text-gray-900 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Total Item Price */}
+                      <div className="text-right min-w-20">
+                        <p className="roboto-black text-gray-900 text-base">৳ {(item.price * currentQty).toLocaleString()}</p>
+                      </div>
+
+                      {/* Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item._id)}
+                        className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2.5 rounded-xl transition-all cursor-pointer"
+                        title="Remove item"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Controls & Price */}
-                  <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                    
-                    {/* Quantity Controls */}
-                    <div className="flex items-center border border-gray-200 rounded-xl p-1 bg-gray-50">
-                      <button onClick={() => decreaseQty(item._id)} className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition text-gray-600 shadow-sm hover:text-gray-900">
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="w-10 text-center text-sm roboto-bold text-gray-800">{item.quantity || 1}</span>
-                      <button onClick={() => increaseQty(item._id)} className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition text-gray-600 shadow-sm hover:text-gray-900">
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    {/* Total Item Price */}
-                    <div className="text-right min-w-20">
-                      <p className="roboto-black text-gray-900 text-base">৳ {(item.price * (item.quantity || 1)).toLocaleString()}</p>
-                    </div>
-
-                    {/* Remove Button */}
-                    <button 
-                      onClick={() => removeItem(item._id)}
-                      className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2.5 rounded-xl transition-all"
-                      title="Remove item"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Right Side: Order Summary */}
@@ -238,9 +314,17 @@ const CartPage = () => {
                   </div>
                 </div>
 
-                <button 
+                {hasOutOfStockItem && (
+                  <p className="text-xs text-red-600 font-semibold mb-3 text-center bg-red-50 p-2.5 rounded-xl border border-red-100">
+                    Remove out-of-stock item(s) to proceed to checkout.
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  disabled={hasOutOfStockItem}
                   onClick={() => navigate('/checkout')}
-                  className="w-full bg-cyan-600 text-white py-4 rounded-xl roboto-bold text-sm uppercase tracking-wider shadow-lg shadow-cyan-600/30 hover:shadow-xl hover:shadow-cyan-600/20 hover:bg-cyan-700 transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-cyan-600 text-white py-4 rounded-xl roboto-bold text-sm uppercase tracking-wider shadow-lg shadow-cyan-600/30 hover:shadow-xl hover:shadow-cyan-600/20 hover:bg-cyan-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
                 >
                   Proceed to Checkout <ArrowRight className="w-4 h-4" />
                 </button>

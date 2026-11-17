@@ -5,13 +5,11 @@ import api from '../api/axiosConfig';
 import { ShoppingBag, Heart, Loader2, ShieldCheck, Truck, RefreshCw, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast'; 
 
-// 🔥 ফিক্স: &nbsp; থাকলে ব্রাউজার লাইন ব্রেক করতে পারে না, তাই শব্দ মাঝখানে কেটে যায়। এখানে সেগুলো সাধারণ স্পেস করা হলো।
 const cleanDescription = (html) =>
   (html || '')
     .replace(/&nbsp;/g, ' ')
     .replace(/\u00a0/g, ' ');
 
-// 🔥 ফিক্স: ডেসক্রিপশনের ভেতরের inline style (word-break, white-space) ওভাররাইড করার CSS
 const descriptionCss = `
   .product-desc,
   .product-desc * {
@@ -42,27 +40,28 @@ const ProductDetails = () => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [activeImage, setActiveImage] = useState('');
 
-  // ইমেজ জুম স্টেট
   const [zoomStyle, setZoomStyle] = useState({
     transformOrigin: 'center center',
     transform: 'scale(1)'
   });
 
-  // নির্দিষ্ট প্রোডাক্ট ফেচ করা
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
       const res = await api.get(`/products/${id}`);
-      return res.data;
+      return res.data?.data || res.data;
     }
   });
 
-  // প্রোডাক্ট লোড হলে ডিফল্ট মেইন ইমেজ সেট করা
+  // প্রোডাক্টের আসল স্টক সংখ্যা
+  const availableStock = product ? Number(product.stock ?? 0) : 0;
+  const isOutOfStock = availableStock <= 0;
+
   useEffect(() => {
     if (product) {
       setActiveImage(product.image || product.images?.[0] || '');
+      setQuantity(1);
       
-      // উইশলিস্ট চেক
       const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
       const exists = wishlist.some(item => item._id === product._id);
       setIsWishlisted(exists);
@@ -92,15 +91,44 @@ const ProductDetails = () => {
     window.dispatchEvent(new Event('storage'));
   };
 
+  // 🔥 Strict '+' বাটন হ্যান্ডলার (স্টকের বেশি কখনোই বাড়বে না)
+  const handleIncreaseQty = () => {
+    if (isOutOfStock) return;
+    if (quantity >= availableStock) {
+      toast.error(`Maximum stock reached! Only ${availableStock} available.`);
+      return;
+    }
+    setQuantity((prev) => (prev < availableStock ? prev + 1 : availableStock));
+  };
+
+  // '-' বাটন হ্যান্ডলার
+  const handleDecreaseQty = () => {
+    if (isOutOfStock) return;
+    setQuantity((prev) => Math.max(1, prev - 1));
+  };
+
+  // Add to Cart হ্যান্ডলার
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product) return false;
+    if (isOutOfStock) {
+      toast.error('This product is out of stock!');
+      return false;
+    }
+
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const index = cart.findIndex(item => item._id === product._id);
+    const existingQtyInCart = index > -1 ? Number(cart[index].quantity || 1) : 0;
+
+    if (existingQtyInCart + quantity > availableStock) {
+      toast.error(`Stock limit exceeded! You already have ${existingQtyInCart} in cart (Total Stock: ${availableStock}).`);
+      return false;
+    }
 
     if (index > -1) {
-      cart[index].quantity = (cart[index].quantity || 1) + quantity;
+      cart[index].quantity = existingQtyInCart + quantity;
+      cart[index].stock = availableStock;
     } else {
-      cart.push({ ...product, quantity, image: activeImage });
+      cart.push({ ...product, stock: availableStock, quantity, image: activeImage });
     }
 
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -110,14 +138,17 @@ const ProductDetails = () => {
       style: { border: '1px solid #67e8f9', color: '#0891b2' },
       iconTheme: { primary: '#06b6d4', secondary: '#fff' },
     });
+    return true;
   };
 
   const handleBuyNow = () => {
-    handleAddToCart();
-    navigate('/cart');
+    if (isOutOfStock) return;
+    const added = handleAddToCart();
+    if (added) {
+      navigate('/cart');
+    }
   };
 
-  // ইমেজ জুম হ্যান্ডলার
   const handleMouseMove = (e) => {
     const { left, top, width, height } = e.target.getBoundingClientRect();
     const x = ((e.clientX - left) / width) * 100;
@@ -156,12 +187,9 @@ const ProductDetails = () => {
     );
   }
 
-  // প্রাইস এবং ডিসকাউন্ট ক্যালকুলেশন
   const priceNum = Number(product.price) || 0;
   const oldPriceNum = Number(product.oldPrice) || 0;
   const discount = (oldPriceNum > priceNum) ? Math.round(((oldPriceNum - priceNum) / oldPriceNum) * 100) : 0;
-  
-  // ডুপ্লিকেট ছবি রিমুভ করা হলো (Set ব্যবহার করে)
   const allImages = [...new Set([product.image, ...(product.images || [])].filter(Boolean))];
 
   return (
@@ -182,7 +210,6 @@ const ProductDetails = () => {
           
           {/* Left: Image Gallery */}
           <div className="lg:col-span-5 flex flex-col gap-5">
-            {/* Main Big Image with Zoom Effect */}
             <div 
               className="bg-white aspect-square rounded-2xl flex justify-center items-center overflow-hidden border border-gray-100 relative cursor-crosshair group shadow-sm p-4"
               onMouseMove={handleMouseMove}
@@ -192,21 +219,26 @@ const ProductDetails = () => {
                 src={activeImage || 'https://placehold.co/400'} 
                 alt={product.name} 
                 style={zoomStyle}
-                className="w-full h-full object-contain transition-transform duration-200 ease-out"
+                className={`w-full h-full object-contain transition-transform duration-200 ease-out ${isOutOfStock ? 'opacity-60 grayscale-[30%]' : ''}`}
               />
-              {discount > 0 && (
+              {discount > 0 && !isOutOfStock && (
                 <span className="absolute top-4 left-4 bg-cyan-500 text-white text-xs roboto-bold px-3 py-1.5 rounded-full shadow-md tracking-wide">
                   {discount}% OFF
                 </span>
               )}
+              {isOutOfStock && (
+                <span className="absolute top-4 left-4 bg-red-600 text-white text-xs roboto-bold px-3 py-1.5 rounded-full shadow-md tracking-wide uppercase">
+                  Out of Stock
+                </span>
+              )}
             </div>
 
-            {/* Thumbnail Row */}
             {allImages.length > 1 && (
               <div className="flex gap-4 overflow-x-auto py-2 scrollbar-hide px-1">
                 {allImages.map((img, index) => (
                   <button 
                     key={index}
+                    type="button"
                     onClick={() => setActiveImage(img)}
                     className={`w-20 h-20 rounded-xl border-2 p-1 flex-shrink-0 transition-all duration-300 bg-white focus:outline-none ${
                       activeImage === img 
@@ -258,7 +290,7 @@ const ProductDetails = () => {
               )}
             </div>
 
-            {/* Quick Specs / Features */}
+            {/* Quick Specs */}
             {product.specifications && product.specifications.length > 0 && (
               <div className="mb-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -277,36 +309,73 @@ const ProductDetails = () => {
             {/* Actions / Add to cart */}
             <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
               
-              <div className="flex items-center gap-2 text-sm mb-5">
-                {product.stock > 0 ? (
+              <div className="flex items-center justify-between gap-2 text-sm mb-5">
+                {!isOutOfStock ? (
                   <span className="text-green-600 bg-green-50 px-3 py-1 rounded-full roboto-semibold flex items-center gap-1.5 border border-green-100">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    In Stock ({product.stock})
+                    In Stock ({availableStock})
                   </span>
                 ) : (
-                  <span className="text-red-500 bg-red-50 px-3 py-1 rounded-full roboto-semibold border border-red-100">
+                  <span className="text-red-600 bg-red-50 px-3 py-1 rounded-full roboto-semibold border border-red-200">
                     Out of Stock
+                  </span>
+                )}
+
+                {!isOutOfStock && quantity >= availableStock && (
+                  <span className="text-xs font-bold text-amber-600">
+                    Max available stock selected ({availableStock})
                   </span>
                 )}
               </div>
 
               <div className="flex flex-wrap items-center gap-4">
-                {/* Quantity */}
-                <div className="flex items-center border border-gray-200 rounded-xl p-1 bg-white shadow-sm h-14">
-                  <button onClick={() => setQuantity(prev => Math.max(1, prev - 1))} className="w-10 h-full roboto-medium text-lg text-gray-600 hover:bg-gray-50 rounded-lg transition">-</button>
-                  <span className="w-12 text-center roboto-bold text-base text-gray-900">{quantity}</span>
-                  <button onClick={() => setQuantity(prev => prev + 1)} className="w-10 h-full roboto-medium text-lg text-gray-600 hover:bg-gray-50 rounded-lg transition">+</button>
+                {/* Quantity Controls (Strictly Clamped to availableStock) */}
+                <div className={`flex items-center border border-gray-200 rounded-xl p-1 bg-white shadow-sm h-14 ${isOutOfStock ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <button 
+                    type="button"
+                    onClick={handleDecreaseQty} 
+                    disabled={isOutOfStock || quantity <= 1}
+                    className="w-10 h-full roboto-medium text-lg text-gray-600 hover:bg-gray-100 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="w-12 text-center roboto-bold text-base text-gray-900 select-none">
+                    {isOutOfStock ? 0 : quantity}
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={handleIncreaseQty} 
+                    disabled={isOutOfStock || quantity >= availableStock}
+                    className="w-10 h-full roboto-medium text-lg text-gray-600 hover:bg-gray-100 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    +
+                  </button>
                 </div>
                 
-                <button onClick={handleAddToCart} disabled={product.stock <= 0} className="flex-1 h-14 min-w-[140px] bg-white text-gray-900 border-2 border-gray-900 rounded-xl roboto-bold text-[13px] uppercase tracking-wider hover:border-cyan-600 hover:bg-cyan-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button 
+                  type="button"
+                  onClick={handleAddToCart} 
+                  disabled={isOutOfStock}
+                  className="flex-1 h-14 min-w-[140px] bg-white text-gray-900 border-2 border-gray-900 rounded-xl roboto-bold text-[13px] uppercase tracking-wider hover:border-cyan-600 hover:bg-cyan-600 hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-900 disabled:hover:border-gray-900 cursor-pointer"
+                >
                   <ShoppingBag className="w-4 h-4" /> Add to Cart
                 </button>
 
-                <button onClick={handleBuyNow} disabled={product.stock <= 0} className="flex-1 h-14 min-w-[140px] bg-cyan-600 text-white rounded-xl roboto-bold text-[13px] uppercase tracking-wider shadow-lg shadow-cyan-600/30 hover:shadow-xl hover:shadow-cyan-600/20 hover:bg-cyan-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                  Buy Now
+                <button 
+                  type="button"
+                  onClick={handleBuyNow} 
+                  disabled={isOutOfStock}
+                  className="flex-1 h-14 min-w-[140px] bg-cyan-600 text-white rounded-xl roboto-bold text-[13px] uppercase tracking-wider shadow-lg shadow-cyan-600/30 hover:shadow-xl hover:shadow-cyan-600/20 hover:bg-cyan-700 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-cyan-600 cursor-pointer"
+                >
+                  {isOutOfStock ? 'Out of Stock' : 'Buy Now'}
                 </button>
 
-                <button onClick={toggleWishlist} className={`h-14 w-14 flex items-center justify-center border-2 rounded-xl transition-all shadow-sm ${isWishlisted ? 'border-red-100 bg-red-50 text-red-500' : 'border-gray-200 bg-white text-gray-400 hover:border-red-200 hover:text-red-400'}`} title="Add to Wishlist">
+                <button 
+                  type="button"
+                  onClick={toggleWishlist} 
+                  className={`h-14 w-14 flex items-center justify-center border-2 rounded-xl transition-all shadow-sm cursor-pointer ${isWishlisted ? 'border-red-100 bg-red-50 text-red-500' : 'border-gray-200 bg-white text-gray-400 hover:border-red-200 hover:text-red-400'}`} 
+                  title="Add to Wishlist"
+                >
                   <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-red-500' : ''}`} />
                 </button>
               </div>
@@ -334,7 +403,6 @@ const ProductDetails = () => {
         {/* Bottom Section */}
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
           
-          {/* Description */}
           {product.description && (
             <div className="lg:col-span-8 min-w-0 overflow-hidden bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50 p-6 md:p-10">
               <h3 className="text-lg roboto-bold text-gray-900 mb-8 flex items-center gap-3">
@@ -342,7 +410,6 @@ const ProductDetails = () => {
                 Product Overview
               </h3>
               
-              {/* 🔥 ফিক্স: break-words/prose বাদ, product-desc ক্লাস + cleanDescription ব্যবহার করা হলো */}
               <div
                 className="product-desc text-gray-600 roboto-medium text-sm leading-loose
                   [&_img]:rounded-2xl [&_img]:my-6 [&_img]:shadow-sm

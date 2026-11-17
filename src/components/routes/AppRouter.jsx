@@ -17,6 +17,7 @@ import CartPage from '../../customer/CartPage';
 import WishlistPage from '../../customer/WishlistPage';
 import ProductDetails from '../ProductDetails';
 import CheckoutPage from '../../customer/CheckoutPage';
+import TrackOrderPage from '../../customer/TrackOrderPage'; 
 import CategoryProducts from '../CategoryProducts';
 import Shop from '../Shop';
 import BrandProducts from '../BrandProducts';
@@ -35,7 +36,6 @@ import EditProduct from '../../admin/EditProduct';
 import AdminRoute from '../../admin/AdminRoute'; 
 import WhatsAppButton from '../WhatsAppButton';
 import ScrollToTop from '../ScrollToTop';
-
 
 // 🔥 PageHead Component for Dynamic Title & Meta Tags
 const PageHead = ({ title, description }) => {
@@ -101,6 +101,11 @@ const router = createBrowserRouter([
         path: "/checkout", 
         element: <><PageHead title="Checkout" /><CheckoutPage /></> 
       },
+      // 🔥 গেস্ট ইউজারদের অর্ডার ও ইনভয়েস দেখার রাউট
+      { 
+        path: "/track-order", 
+        element: <><PageHead title="Track Order" description="Track your order status and download invoice." /><TrackOrderPage /></> 
+      },
       { 
         path: "/category/:slug", 
         element: <><PageHead title="Category Products" /><CategoryProducts /></> 
@@ -129,11 +134,11 @@ const router = createBrowserRouter([
   // ==========================================
   {
     path: "/admin",
-    element: <AdminRoute />, // 🔥 প্রথমে চেক করবে ইউজার অ্যাডমিন কি না
+    element: <AdminRoute />,
     children: [
       {
         path: "", 
-        element: <AdminLayout />, // অ্যাডমিন হলে তবেই AdminLayout রেন্ডার হবে
+        element: <AdminLayout />,
         children: [
           { index: true, element: <><PageHead title="Admin Dashboard" /><AdminDashboard /></> },
           { path: "add-product", element: <><PageHead title="Add Product" /><AddProduct /></> },
@@ -153,7 +158,6 @@ const router = createBrowserRouter([
 const AppRouter = () => {
   return (
     <HelmetProvider>
-      {/* Base Fallback Helmet */}
       <Helmet>
         <title>Essential Zone | Premium E-Commerce Store</title>
         <meta name="description" content="Shop the latest gadgets, electronics, and accessories online." />
@@ -161,7 +165,6 @@ const AppRouter = () => {
 
       <RouterProvider router={router} />
       
-      {/* 🔥 গ্লোবাল টোস্ট নোটিফিকেশন সেটআপ */}
       <Toaster 
         position="top-right"
         reverseOrder={false}

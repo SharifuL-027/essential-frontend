@@ -3,11 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ShoppingBag, ArrowLeft, CheckCircle, Loader2, Truck, User, Phone, Mail, MapPin } from 'lucide-react';
 import api from '../api/axiosConfig';
 import toast from 'react-hot-toast';
-
+import Invoice from '../customer/Invoice'; 
 
 const playOrderSuccessSound = () => {
   try {
-    // public/sounds/checkout-sound.mp3 file-ti play hobe
     const audio = new Audio('/sounds/jackpot_money_sound.mp3.mpeg');
     audio.play().catch((err) => {
       console.error("Audio playback error:", err);
@@ -23,6 +22,9 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   
+  // 🔥 অর্ডার কনফার্ম হওয়ার পর সরাসরি Invoice.jsx ওপেন করার স্টেট
+  const [confirmedOrder, setConfirmedOrder] = useState(null);
+
   const [deliverySettings, setDeliverySettings] = useState({ insideDhaka: 60, outsideDhaka: 120 });
   const [shippingCost, setShippingCost] = useState(60);
 
@@ -38,7 +40,8 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
-    if (savedCart.length === 0) {
+    // ইনভয়েস ওপেন থাকা অবস্থায় যেন কার্ট খালি দেখে /cart এ না পাঠায়
+    if (savedCart.length === 0 && !confirmedOrder) {
       navigate('/cart');
     }
     setCartItems(savedCart);
@@ -55,7 +58,7 @@ const CheckoutPage = () => {
       }
     };
     fetchSettings();
-  }, [navigate]);
+  }, [navigate, confirmedOrder]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -108,6 +111,26 @@ const CheckoutPage = () => {
       // 🔊 Single sound play hobe checkout complete hole
       playOrderSuccessSound();
 
+      const newOrder = res.data?.data || res.data;
+      const orderToSave = newOrder?._id 
+        ? newOrder 
+        : { 
+            ...orderData, 
+            _id: Math.random().toString(36).substr(2, 9).toUpperCase(), 
+            createdAt: new Date().toISOString(), 
+            isDelivered: false,
+            isPaid: false
+          };
+
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        const guestOrders = JSON.parse(localStorage.getItem('guestOrders')) || [];
+        guestOrders.unshift(orderToSave);
+        localStorage.setItem('guestOrders', JSON.stringify(guestOrders));
+      }
+
+      // 🔥 প্রথমে confirmedOrder সেট করি, তারপর কার্ট ক্লিয়ার করি
+      setConfirmedOrder(orderToSave);
       localStorage.removeItem('cart');
       window.dispatchEvent(new Event('storage'));
       
@@ -116,18 +139,7 @@ const CheckoutPage = () => {
         iconTheme: { primary: '#06b6d4', secondary: '#fff' }
       });
       
-      const userStr = localStorage.getItem('user');
-      if (!userStr) {
-        const guestOrders = JSON.parse(localStorage.getItem('guestOrders')) || [];
-        const newOrder = res.data?.data || res.data;
-        const orderToSave = newOrder?._id ? newOrder : { ...orderData, _id: Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString(), isDelivered: false };
-        
-        guestOrders.unshift(orderToSave);
-        localStorage.setItem('guestOrders', JSON.stringify(guestOrders));
-      }
-      
       setLoading(false);
-      navigate('/account');
       
     } catch (error) {
       console.error(error);
@@ -268,12 +280,10 @@ const CheckoutPage = () => {
                   className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all resize-none"
                 ></textarea>
               </div>
-
             </div>
           </div>
 
           <div className="lg:col-span-5 space-y-6">
-            
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <h2 className="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Your Order</h2>
               
@@ -331,12 +341,24 @@ const CheckoutPage = () => {
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Place Order'}
               </button>
             </div>
-
           </div>
 
         </form>
-
       </div>
+
+      {/* 🔥 অর্ডার কনফার্ম হওয়ার সাথে সাথেই তোমার Invoice.jsx ওপেন হবে */}
+      {confirmedOrder && (
+        <Invoice 
+          order={confirmedOrder} 
+          autoOpen={true} 
+          onClose={() => {
+  setConfirmedOrder(null);
+  const isLoggedIn = Boolean(localStorage.getItem('user'));
+  navigate(isLoggedIn ? '/account' : '/track-order');
+}} 
+        />
+      )}
+
     </div>
   );
 };
