@@ -363,9 +363,6 @@ const Shop = () => {
                           <button type="button" onClick={(e) => handleToggleWishlist(product, e)} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
                             <Heart className={`w-4 h-4 ${isWishlisted ? "text-red-500 fill-red-500" : "hover:text-red-500"}`} />
                           </button>
-                          <button type="button" onClick={(e) => { e.preventDefault(); toast('Zoom feature coming soon!', { icon: '🔍', style: { color: '#0891b2' } }); }} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 text-gray-600 hover:text-cyan-600 transition-colors cursor-pointer">
-                            <Maximize2 className="w-4 h-4" />
-                          </button>
                           <Link to={`/product/${product._id}`} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 text-gray-600 hover:text-cyan-600 transition-colors flex justify-center items-center">
                             <Eye className="w-4 h-4" />
                           </Link>
