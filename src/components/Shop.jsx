@@ -12,13 +12,13 @@ const Shop = () => {
   const [wishlist, setWishlist] = useState([]);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // 🔥 ফিল্টারিং স্টেটস
+  // ফিল্টারিং স্টেটস
   const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   
-  // 🔥 Price Slider States
+  // Price Slider States
   const [maxPriceLimit, setMaxPriceLimit] = useState(100000);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 });
 
@@ -42,21 +42,21 @@ const Shop = () => {
 
   const products = productRes?.products || [];
 
-  // 🔥 প্রোডাক্ট লোড হওয়ার পর স্লাইডারের সর্বোচ্চ দাম অটো-সেট করা
+  // প্রোডাক্ট লোড হওয়ার পর স্লাইডারের সর্বোচ্চ দাম অটো-সেট করা
   useEffect(() => {
     if (products.length > 0) {
-      const highestPrice = Math.max(...products.map(p => p.price));
+      const highestPrice = Math.max(...products.map(p => Number(p.price) || 0), 100);
       setMaxPriceLimit(highestPrice);
       setPriceRange({ min: 0, max: highestPrice });
     }
-  }, [products.length]);
+  }, [products]);
 
   const uniqueCategories = [...new Set(products.map(p => p.category?.name || p.category))].filter(Boolean);
   const uniqueBrands = [...new Set(products.map(p => p.brand))].filter(Boolean);
 
   // ফ্রন্টএন্ড ফিল্টারিং লজিক
   const filteredProducts = useMemo(() => {
-    let result = products;
+    let result = [...products];
 
     if (searchQuery) {
       result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -69,17 +69,16 @@ const Shop = () => {
     }
     
     // Price Range Filter
-    result = result.filter(p => p.price >= Number(priceRange.min) && p.price <= Number(priceRange.max));
+    result = result.filter(p => Number(p.price) >= Number(priceRange.min) && Number(p.price) <= Number(priceRange.max));
 
     if (sortBy === 'price-low') {
-      result = result.sort((a, b) => a.price - b.price);
+      result.sort((a, b) => Number(a.price) - Number(b.price));
     } else if (sortBy === 'price-high') {
-      result = result.sort((a, b) => b.price - a.price);
+      result.sort((a, b) => Number(b.price) - Number(a.price));
     }
 
     return result;
   }, [products, searchQuery, selectedCategory, selectedBrand, priceRange, sortBy]);
-
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -108,26 +107,44 @@ const Shop = () => {
     window.dispatchEvent(new Event('storage'));
   };
 
+  // Strict স্টক ভ্যালিডেশন সহ Add to Cart হ্যান্ডলার
   const handleAddToCart = (product, e) => {
     e.preventDefault();
+    const availableStock = Number(product.stock ?? 0);
+
+    if (availableStock <= 0) {
+      toast.error('Sorry, this product is out of stock!');
+      return;
+    }
+
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const existingIndex = cart.findIndex((item) => item._id === product._id);
+    const currentQtyInCart = existingIndex > -1 ? Number(cart[existingIndex].quantity || 1) : 0;
+
+    if (currentQtyInCart + 1 > availableStock) {
+      toast.error(`Maximum stock reached! Only ${availableStock} item(s) available.`);
+      return;
+    }
 
     if (existingIndex > -1) {
-      cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+      cart[existingIndex].quantity = currentQtyInCart + 1;
+      cart[existingIndex].stock = availableStock;
     } else {
-      cart.push({ ...product, quantity: 1 });
+      cart.push({ ...product, stock: availableStock, quantity: 1 });
     }
 
     localStorage.setItem('cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('storage'));
     
-    // 🔥 Cyan Toast 
     toast.success('Added to cart successfully! 🛒', { 
       style: { border: '1px solid #67e8f9', color: '#0891b2' }, 
       iconTheme: { primary: '#06b6d4', secondary: '#fff' } 
     });
   };
+
+  const safeMaxLimit = maxPriceLimit || 1;
+  const leftPercent = Math.min(100, Math.max(0, (priceRange.min / safeMaxLimit) * 100));
+  const rightPercent = Math.min(100, Math.max(0, 100 - (priceRange.max / safeMaxLimit) * 100));
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] pt-28 pb-16 px-4 md:px-6">
@@ -142,6 +159,7 @@ const Shop = () => {
 
           <div className="flex items-center gap-3 w-full md:w-auto">
             <button 
+              type="button"
               onClick={() => setIsMobileFilterOpen(true)}
               className="lg:hidden flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl roboto-bold text-sm hover:bg-gray-200 transition flex-1 justify-center"
             >
@@ -174,7 +192,7 @@ const Shop = () => {
               
               <div className="flex justify-between items-center lg:hidden mb-6">
                 <h3 className="text-lg roboto-black">Filters</h3>
-                <button onClick={() => setIsMobileFilterOpen(false)} className="p-2 bg-gray-100 rounded-full text-gray-600"><X className="w-4 h-4" /></button>
+                <button type="button" onClick={() => setIsMobileFilterOpen(false)} className="p-2 bg-gray-100 rounded-full text-gray-600"><X className="w-4 h-4" /></button>
               </div>
 
               <div className="bg-white lg:p-6 lg:rounded-2xl lg:shadow-sm lg:border border-gray-100 space-y-8">
@@ -234,18 +252,16 @@ const Shop = () => {
                   </div>
                 )}
 
-                {/* 🔥 Custom Dual Range Price Filter (Draggable + Typable) */}
+                {/* Custom Dual Range Price Filter */}
                 <div>
                   <h4 className="text-sm roboto-bold text-gray-900 uppercase tracking-wider mb-2 border-b pb-2">Price Range (৳)</h4>
                   
-                  {/* Slider Track and Thumbs */}
                   <div className="relative h-1.5 bg-gray-200 rounded-full mt-6 mb-5">
-                    {/* Active Range Color */}
                     <div 
                       className="absolute h-full bg-cyan-600 rounded-full"
                       style={{
-                        left: `${(priceRange.min / maxPriceLimit) * 100}%`,
-                        right: `${100 - (priceRange.max / maxPriceLimit) * 100}%`
+                        left: `${leftPercent}%`,
+                        right: `${rightPercent}%`
                       }}
                     ></div>
                     
@@ -289,8 +305,9 @@ const Shop = () => {
                 </div>
 
                 <button 
+                  type="button"
                   onClick={clearFilters}
-                  className="w-full bg-cyan-50 text-cyan-600 py-3 rounded-xl text-sm roboto-bold uppercase tracking-wider hover:bg-cyan-100 transition"
+                  className="w-full bg-cyan-50 text-cyan-600 py-3 rounded-xl text-sm roboto-bold uppercase tracking-wider hover:bg-cyan-100 transition cursor-pointer"
                 >
                   Clear All Filters
                 </button>
@@ -309,32 +326,44 @@ const Shop = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => {
                   const isWishlisted = wishlist.some((item) => item._id === product._id);
-                  const discount = product.oldPrice ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
+                  const availableStock = Number(product.stock ?? 0);
+                  const isOutOfStock = availableStock <= 0;
+
+                  const priceNum = Number(product.price) || 0;
+                  const oldPriceNum = Number(product.oldPrice) || 0;
+                  const discount = (oldPriceNum > priceNum) ? Math.round(((oldPriceNum - priceNum) / oldPriceNum) * 100) : 0;
 
                   return (
                     <div key={product._id} className="group flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                       
                       <div className="relative w-full aspect-[4/5] bg-gray-50 rounded-t-2xl p-4 flex items-center justify-center overflow-hidden">
                         
-                        {discount > 0 && (
-                          <span className="absolute top-3 left-3 bg-cyan-500 text-white text-[10px] roboto-bold px-2 py-1 rounded-md shadow-sm z-10">
-                            -{discount}%
-                          </span>
-                        )}
+                        <div className="absolute top-3 left-3 flex flex-col gap-1 z-10 pointer-events-none">
+                          {isOutOfStock && (
+                            <span className="bg-red-600 text-white text-[10px] roboto-bold px-2 py-1 rounded-md shadow-sm uppercase tracking-wider w-max">
+                              Out of Stock
+                            </span>
+                          )}
+                          {discount > 0 && !isOutOfStock && (
+                            <span className="bg-cyan-500 text-white text-[10px] roboto-bold px-2 py-1 rounded-md shadow-sm w-max">
+                              -{discount}%
+                            </span>
+                          )}
+                        </div>
 
                         <Link to={`/product/${product._id}`} className="w-full h-full flex items-center justify-center">
                           <img 
                             src={product.image} 
                             alt={product.name} 
-                            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500" 
+                            className={`w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ${isOutOfStock ? 'opacity-65' : ''}`} 
                           />
                         </Link>
 
                         <div className="absolute top-3 right-3 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                          <button onClick={(e) => handleToggleWishlist(product, e)} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 text-gray-600 transition-colors">
+                          <button type="button" onClick={(e) => handleToggleWishlist(product, e)} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
                             <Heart className={`w-4 h-4 ${isWishlisted ? "text-red-500 fill-red-500" : "hover:text-red-500"}`} />
                           </button>
-                          <button onClick={(e) => { e.preventDefault(); toast('Zoom feature coming soon!', { icon: '🔍', style: { color: '#0891b2' } }); }} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 text-gray-600 hover:text-cyan-600 transition-colors">
+                          <button type="button" onClick={(e) => { e.preventDefault(); toast('Zoom feature coming soon!', { icon: '🔍', style: { color: '#0891b2' } }); }} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 text-gray-600 hover:text-cyan-600 transition-colors cursor-pointer">
                             <Maximize2 className="w-4 h-4" />
                           </button>
                           <Link to={`/product/${product._id}`} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 text-gray-600 hover:text-cyan-600 transition-colors flex justify-center items-center">
@@ -343,8 +372,13 @@ const Shop = () => {
                         </div>
 
                         <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300 z-10">
-                          <button onClick={(e) => handleAddToCart(product, e)} className="w-full bg-[#1e293b] text-white py-2.5 rounded-lg text-xs roboto-bold shadow-lg hover:bg-cyan-600 transition-colors flex items-center justify-center gap-1.5 uppercase tracking-wider">
-                            <ShoppingBag className="w-4 h-4" /> Add to cart
+                          <button 
+                            type="button"
+                            disabled={isOutOfStock}
+                            onClick={(e) => handleAddToCart(product, e)} 
+                            className="w-full bg-[#1e293b] text-white py-2.5 rounded-lg text-xs roboto-bold shadow-lg hover:bg-cyan-600 transition-colors flex items-center justify-center gap-1.5 uppercase tracking-wider disabled:bg-gray-200 disabled:text-gray-500 disabled:hover:bg-gray-200 disabled:hover:text-gray-500 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <ShoppingBag className="w-4 h-4" /> {isOutOfStock ? 'Out of Stock' : 'Add to cart'}
                           </button>
                         </div>
                       </div>
@@ -356,9 +390,9 @@ const Shop = () => {
                           </h3>
                         </Link>
                         <div className="mt-2.5 flex items-center justify-center gap-2">
-                          <span className="text-cyan-600 roboto-bold text-lg">৳ {product.price?.toLocaleString()}</span>
-                          {product.oldPrice && (
-                            <span className="text-gray-400 text-xs line-through roboto-medium">৳ {product.oldPrice?.toLocaleString()}</span>
+                          <span className="text-cyan-600 roboto-bold text-lg">৳ {priceNum.toLocaleString()}</span>
+                          {oldPriceNum > priceNum && (
+                            <span className="text-gray-400 text-xs line-through roboto-medium">৳ {oldPriceNum.toLocaleString()}</span>
                           )}
                         </div>
                       </div>
@@ -374,7 +408,7 @@ const Shop = () => {
                 </div>
                 <h3 className="text-xl roboto-bold text-gray-800 mb-2">No products found</h3>
                 <p className="text-gray-500 roboto-medium mb-6">Try adjusting your filters or search query.</p>
-                <button onClick={clearFilters} className="bg-cyan-600 text-white px-6 py-2.5 rounded-xl text-sm roboto-bold hover:bg-cyan-700 transition">
+                <button type="button" onClick={clearFilters} className="bg-cyan-600 text-white px-6 py-2.5 rounded-xl text-sm roboto-bold hover:bg-cyan-700 transition cursor-pointer">
                   Clear Filters
                 </button>
               </div>
